@@ -20,7 +20,7 @@ export function Header() {
         <Link href="/" asChild>
           <Pressable>
             <Text style={{ color: '#fff', fontSize: 22, fontWeight: '800', letterSpacing: 0.3 }}>
-              Premier<Text style={{ color: colors.sun }}> Booking</Text>
+              Premier<Text style={{ color: colors.accent }}> Booking</Text>
             </Text>
           </Pressable>
         </Link>

@@ -1,10 +1,10 @@
 import { Link } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Image, ScrollView, Text, View } from 'react-native';
-import { busyDays, listingBySlugLive, requestBooking } from '../lib/api';
+import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { busyDays, liveCatalog, listingBySlugLive, requestBookings, type BookingDraft } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { areaById, bayById, catalog } from '../lib/catalog';
-import { iso, listingPath, money, niceDate, nightsBetween, priceLabel } from '../lib/format';
+import { addDays, iso, listingPath, money, niceDate, nightsBetween, priceLabel } from '../lib/format';
 import { hasDatabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
 import { CATEGORY_LABELS, type Listing } from '../lib/types';
@@ -30,51 +30,71 @@ export function ListingDetail({ slug }: { slug: string }) {
       <Seo title={`${listing.title}${area ? ` in ${area.name}` : ''}`} description={description} path={listingPath(listing)}
         jsonLd={isStay
           ? { '@context': 'https://schema.org', '@type': 'VacationRental', name: listing.title, description: listing.summary,
-              address: listing.address ?? undefined, containsPlace: { '@type': 'Accommodation', occupancy: { '@type': 'QuantitativeValue', maxValue: listing.max_guests } } }
+              image: listing.photos.slice(0, 5), address: listing.address ?? undefined,
+              containsPlace: { '@type': 'Accommodation', numberOfBedrooms: listing.bedrooms ?? undefined,
+                occupancy: { '@type': 'QuantitativeValue', maxValue: listing.max_guests } } }
           : { '@context': 'https://schema.org', '@type': 'TouristTrip', name: listing.title, description: listing.summary,
+              image: listing.photos.slice(0, 5),
               offers: listing.price_cents > 0 ? { '@type': 'Offer', price: listing.price_cents / 100, priceCurrency: 'USD' } : undefined }} />
 
       <Text style={{ color: colors.water, fontWeight: '700' }}>{CATEGORY_LABELS[listing.category]}{where ? ` · ${where}` : ''}</Text>
       <H1>{listing.title}</H1>
-
-      {listing.photos.length > 1 ? (
-        <ScrollView horizontal style={{ borderRadius: 12 }} contentContainerStyle={{ gap: 8 }}>
-          {listing.photos.map((p) => <Image key={p} source={{ uri: p }} style={{ width: 420, height: 280, borderRadius: 12 }} accessibilityLabel={listing.title} />)}
-        </ScrollView>
-      ) : (
-        <View style={{ borderRadius: 12, overflow: 'hidden' }}><Photo listing={listing} height={300} /></View>
-      )}
+      <Gallery listing={listing} />
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 28, marginTop: 20, alignItems: 'flex-start' }}>
         <View style={{ flexBasis: 420, flexGrow: 2, flexShrink: 1 }}>
-          <Row gap={8}>
-            {isStay ? (
-              <>
-                <Fact text={`Sleeps ${listing.max_guests}`} />
-                {listing.bedrooms ? <Fact text={`${listing.bedrooms} bedrooms`} /> : null}
-                {listing.beds ? <Fact text={`${listing.beds} beds`} /> : null}
-                {listing.bathrooms ? <Fact text={`${listing.bathrooms} baths`} /> : null}
-                {listing.min_nights > 1 ? <Fact text={`${listing.min_nights} night minimum`} /> : null}
-              </>
-            ) : (
-              <>
-                {listing.duration_hours ? <Fact text={`${listing.duration_hours} hours`} /> : null}
-                <Fact text={`Up to ${listing.max_guests} people`} />
-                {listing.start_times.length ? <Fact text={`Starts ${listing.start_times.join(' or ')}`} /> : null}
-              </>
-            )}
-          </Row>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text }}>
+            {isStay
+              ? [`${listing.max_guests} guests`, listing.bedrooms && `${listing.bedrooms} bedrooms`, listing.beds && `${listing.beds} beds`, listing.bathrooms && `${listing.bathrooms} baths`].filter(Boolean).join(' · ')
+              : [listing.duration_hours && `${listing.duration_hours} hours`, `up to ${listing.max_guests} people`, listing.start_times.length && `starts ${listing.start_times.join(' or ')}`].filter(Boolean).join(' · ')}
+          </Text>
+
+          {listing.highlights.length ? (
+            <View style={{ gap: 8, marginTop: 16, paddingVertical: 14, borderTopWidth: 1, borderBottomWidth: 1, borderColor: colors.line }}>
+              {listing.highlights.map((h) => <P key={h}>✓  {h}</P>)}
+            </View>
+          ) : null}
+
           <P style={{ marginTop: 16 }}>{listing.description || listing.summary}</P>
+
+          {listing.rooms.length ? (
+            <>
+              <H2>Where you'll sleep</H2>
+              <Row gap={12}>
+                {listing.rooms.map((r) => (
+                  <Card key={r.name} style={{ flexBasis: 150, flexGrow: 1 }}>
+                    <Text style={{ fontWeight: '700', color: colors.text }}>{r.name}</Text>
+                    <P muted>{r.beds}</P>
+                  </Card>
+                ))}
+              </Row>
+            </>
+          ) : null}
+
           {listing.species.length ? <><H2>What you can catch</H2><P>{listing.species.join(' · ')}</P></> : null}
           {listing.amenities.length ? (
             <>
               <H2>{isStay ? 'What this place has' : "What's included"}</H2>
-              <View style={{ gap: 6 }}>{listing.amenities.map((a) => <P key={a}>• {a}</P>)}</View>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: 8 }}>
+                {listing.amenities.map((a) => <View key={a} style={{ flexBasis: 260, flexGrow: 1 }}><P>• {a}</P></View>)}
+              </View>
             </>
           ) : null}
-          {listing.address || listing.meeting_point ? (
-            <><H2>Where</H2><P>{listing.address || listing.meeting_point}</P></>
+
+          {isStay || listing.house_rules.length || listing.cancellation_policy ? (
+            <>
+              <H2>Things to know</H2>
+              <View style={{ gap: 6 }}>
+                {listing.check_in_time ? <P>{`Check-in after ${listing.check_in_time}`}</P> : null}
+                {listing.check_out_time ? <P>{`Checkout before ${listing.check_out_time}`}</P> : null}
+                {isStay && listing.min_nights > 1 ? <P>{`${listing.min_nights} night minimum`}</P> : null}
+                {listing.house_rules.map((r) => <P key={r}>• {r}</P>)}
+                {listing.cancellation_policy ? <P>{`Cancellation: ${listing.cancellation_policy}`}</P> : null}
+              </View>
+            </>
           ) : null}
+
+          {listing.address || listing.meeting_point ? <><H2>Where</H2><P>{listing.address || listing.meeting_point}</P></> : null}
         </View>
         <View style={{ flexBasis: 340, flexGrow: 1 }}>
           <BookingBox listing={listing} />
@@ -84,16 +104,72 @@ export function ListingDetail({ slug }: { slug: string }) {
   );
 }
 
-function Fact({ text }: { text: string }) {
-  return <View style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: colors.line, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
-    <Text style={{ color: colors.text }}>{text}</Text>
-  </View>;
+// One big photo and four small ones on wide screens; a swipe row on phones.
+function Gallery({ listing }: { listing: Listing }) {
+  const real = useWindowDimensions().width;
+  // Pages are pre-built at desktop width; switch to the phone layout after the page loads.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const width = mounted ? real : 1280;
+  const [open, setOpen] = useState<number | null>(null);
+  const photos = listing.photos;
+  if (!photos.length) return <View style={{ borderRadius: 12, overflow: 'hidden' }}><Photo listing={listing} height={300} /></View>;
+  if (open !== null) {
+    return (
+      <View style={{ gap: 8 }}>
+        <Image source={{ uri: photos[open] }} style={{ width: '100%', height: Math.min(620, width * 0.62), borderRadius: 12, backgroundColor: '#000' }} resizeMode="contain" accessibilityLabel={listing.title} />
+        <Row gap={8}>
+          <Button small kind="ghost" title="‹ Back" onPress={() => setOpen((open + photos.length - 1) % photos.length)} />
+          <Text style={{ color: colors.muted }}>{`${open + 1} of ${photos.length}`}</Text>
+          <Button small kind="ghost" title="Next ›" onPress={() => setOpen((open + 1) % photos.length)} />
+          <Button small kind="secondary" title="Close photos" onPress={() => setOpen(null)} />
+        </Row>
+      </View>
+    );
+  }
+  if (width < 760 || photos.length < 5) {
+    return (
+      <ScrollView horizontal style={{ borderRadius: 12 }} contentContainerStyle={{ gap: 8 }}>
+        {photos.map((p, i) => (
+          <Pressable key={p} onPress={() => setOpen(i)}>
+            <Image source={{ uri: p }} style={{ width: Math.min(width - 48, 460), height: 280, borderRadius: 12, backgroundColor: colors.busy }} accessibilityLabel={listing.title} />
+          </Pressable>
+        ))}
+      </ScrollView>
+    );
+  }
+  return (
+    <View style={{ flexDirection: 'row', gap: 8, height: 420, borderRadius: 14, overflow: 'hidden' }}>
+      <Pressable style={{ flex: 2 }} onPress={() => setOpen(0)}>
+        <Image source={{ uri: photos[0] }} style={{ width: '100%', height: '100%', backgroundColor: colors.busy }} accessibilityLabel={listing.title} />
+      </Pressable>
+      <View style={{ flex: 2, flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {photos.slice(1, 5).map((p, i) => (
+          <Pressable key={p} style={{ width: '48.6%', height: 206 }} onPress={() => setOpen(i + 1)}>
+            <Image source={{ uri: p }} style={{ width: '100%', height: '100%', backgroundColor: colors.busy }} />
+            {i === 3 && photos.length > 5 ? (
+              <View style={{ position: 'absolute', right: 10, bottom: 10, backgroundColor: '#fff', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 }}>
+                <Text style={{ fontWeight: '700' }}>{`Show all ${photos.length} photos`}</Text>
+              </View>
+            ) : null}
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+type AddOn = { listing: Listing; day: string; time: string };
+
+function tripTotal(t: Listing, guests: number) {
+  if (t.price_cents <= 0) return 0;
+  return t.price_unit === 'person' ? t.price_cents * guests : t.price_cents;
 }
 
 function BookingBox({ listing }: { listing: Listing }) {
   const { session, profile } = useAuth();
   const isStay = listing.kind === 'stay';
-  const today = iso(new Date());
+  const [today, setToday] = useState<string | null>(null);
   const [busy, setBusy] = useState<Record<string, DayMark>>({});
   const [start, setStart] = useState<string | null>(null);
   const [end, setEnd] = useState<string | null>(null);
@@ -105,43 +181,52 @@ function BookingBox({ listing }: { listing: Listing }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
+  const [trips, setTrips] = useState<Listing[]>([]);
+  const [addOns, setAddOns] = useState<AddOn[]>([]);
 
-  useEffect(() => { busyDays(listing.id, today).then(setBusy); }, [listing.id, today]);
+  useEffect(() => { setToday(iso(new Date())); }, []);
+  useEffect(() => { if (today) busyDays(listing.id, today).then(setBusy); }, [listing.id, today]);
   useEffect(() => { if (profile) { setName((n) => n || profile.full_name); setPhone((p) => p || profile.phone || ''); } }, [profile]);
+  useEffect(() => {
+    if (isStay) liveCatalog().then((c) => setTrips(c.listings.filter((l) => l.kind === 'trip' && l.area_id === listing.area_id)));
+  }, [isStay, listing.area_id]);
 
   const nights = isStay && start && end ? nightsBetween(start, end) : 0;
-  const total = useMemo(() => {
-    if (listing.price_cents <= 0) return 0;
-    if (isStay) return nights * listing.price_cents;
-    return listing.price_unit === 'person' ? listing.price_cents * (Number(guests) || 1) : listing.price_cents;
-  }, [listing, isStay, nights, guests]);
+  const people = Number(guests) || 1;
+  const lodging = isStay && listing.price_cents > 0 ? nights * listing.price_cents : 0;
+  const cleaning = isStay && nights > 0 ? listing.cleaning_fee_cents : 0;
+  const own = isStay ? lodging + cleaning : tripTotal(listing, people);
+  const extras = addOns.reduce((sum, a) => sum + tripTotal(a.listing, people), 0);
+  const total = own + extras;
 
   const ready = isStay ? Boolean(start && end && nights >= listing.min_nights) : Boolean(start);
-  const tooMany = Number(guests) > listing.max_guests;
+  const tooMany = people > listing.max_guests;
+  const stayDays = useMemo(() => {
+    if (!start || !end) return [] as string[];
+    const out: string[] = [];
+    for (let d = start; d <= end; d = addDays(d, 1)) out.push(d);
+    return out;
+  }, [start, end]);
 
   async function submit() {
     setError('');
     if (!name.trim() || !phone.trim()) return setError('Add your name and a phone number so the host can reach you.');
     setSending(true);
-    try {
-      await requestBooking({
-        listing_id: listing.id, guest_name: name.trim(), guest_email: session?.user.email ?? '', guest_phone: phone.trim(),
-        start_date: start!, end_date: isStay ? end! : start!, start_time: isStay ? null : time || null,
-        guests: Number(guests) || 1, total_cents: total, notes: notes.trim() || null,
-      });
-      setSent(true);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setSending(false);
-    }
+    const base = { guest_name: name.trim(), guest_email: session?.user.email ?? '', guest_phone: phone.trim(), guests: people, notes: notes.trim() || null };
+    const items: BookingDraft[] = [{
+      ...base, listing_id: listing.id, start_date: start!, end_date: isStay ? end! : start!,
+      start_time: isStay ? null : time || null, total_cents: own,
+    }];
+    for (const a of addOns) items.push({ ...base, listing_id: a.listing.id, start_date: a.day, end_date: a.day, start_time: a.time || null, total_cents: tripTotal(a.listing, people) });
+    try { await requestBookings(items); setSent(true); } catch (e) { setError((e as Error).message); }
+    setSending(false);
   }
 
   if (sent) {
     return (
       <Card>
         <H2 style={{ marginTop: 0 }}>Request sent</H2>
-        <P>The host will look at your dates and confirm. You'll see the answer under My trips.</P>
+        <P>{addOns.length ? 'Your stay and trips went to the host together. ' : ''}The host will check your dates and confirm. You'll see the answer under My trips.</P>
         <View style={{ marginTop: 12 }}><Button title="Go to My trips" href="/account" /></View>
       </Card>
     );
@@ -153,17 +238,30 @@ function BookingBox({ listing }: { listing: Listing }) {
       <Text style={{ fontWeight: '700', color: colors.text }}>
         {isStay ? (start && !end ? 'Now pick your check-out day' : 'Pick check-in and check-out') : 'Pick a day'}
       </Text>
-      <Calendar busy={busy} start={start} end={end} range={isStay} months={1}
-        onChange={(a, b) => { setStart(a); setEnd(isStay ? b : a); }} />
-      {start ? (
-        <P>{isStay ? `${niceDate(start)} → ${end ? niceDate(end) : '…'}${nights ? ` · ${nights} nights` : ''}` : niceDate(start)}</P>
-      ) : null}
+      {today ? (
+        <Calendar busy={busy} start={start} end={end} range={isStay} months={1} today={today}
+          onChange={(a, b) => { setStart(a); setEnd(isStay ? b : a); setAddOns([]); }} />
+      ) : <View style={{ height: 320 }} />}
+      {start ? <P>{isStay ? `${niceDate(start)} → ${end ? niceDate(end) : '…'}${nights ? ` · ${nights} nights` : ''}` : niceDate(start)}</P> : null}
       {isStay && nights > 0 && nights < listing.min_nights ? <Notice tone="bad">{`This place has a ${listing.min_nights} night minimum.`}</Notice> : null}
       {!isStay && listing.start_times.length > 1 ? (
         <Row gap={8}>{listing.start_times.map((t) => <Chip key={t} label={t} active={time === t} onPress={() => setTime(t)} />)}</Row>
       ) : null}
       <Field label={`Guests (max ${listing.max_guests})`} keyboardType="number-pad" value={guests} onChangeText={setGuests} />
       {tooMany ? <Notice tone="bad">{`This one takes up to ${listing.max_guests}.`}</Notice> : null}
+
+      {isStay && ready && trips.length ? <AddTrips trips={trips} days={stayDays} addOns={addOns} setAddOns={setAddOns} /> : null}
+
+      {total > 0 ? (
+        <View style={{ gap: 4, borderTopWidth: 1, borderColor: colors.line, paddingTop: 10 }}>
+          {lodging ? <Line label={`${money(listing.price_cents)} × ${nights} nights`} value={lodging} /> : null}
+          {cleaning ? <Line label="Cleaning fee" value={cleaning} /> : null}
+          {!isStay && own ? <Line label={listing.title} value={own} /> : null}
+          {addOns.map((a) => <Line key={a.listing.id + a.day} label={`${a.listing.title}, ${niceDate(a.day)}`} value={tripTotal(a.listing, people)} />)}
+          <Line label="Estimated total" value={total} bold />
+          {addOns.some((a) => a.listing.price_cents <= 0) || (isStay && listing.price_cents <= 0) ? <P muted style={{ fontSize: 13 }}>Items marked "Ask for price" get quoted by the host.</P> : null}
+        </View>
+      ) : null}
 
       {!hasDatabase ? (
         <Notice>Online booking opens soon. Call 361-210-8494 to book these dates.</Notice>
@@ -174,13 +272,54 @@ function BookingBox({ listing }: { listing: Listing }) {
           <Field label="Your name" value={name} onChangeText={setName} />
           <Field label="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
           <Field label="Anything the host should know" multiline value={notes} onChangeText={setNotes} />
-          {total > 0 ? <P>{`Estimated total: ${money(total)}`}</P> : null}
           {error ? <Notice tone="bad">{error}</Notice> : null}
-          <Button title="Request to book" onPress={submit} busy={sending} disabled={!ready || tooMany} />
+          <Button title={addOns.length ? `Request stay + ${addOns.length} trip${addOns.length > 1 ? 's' : ''}` : 'Request to book'} onPress={submit} busy={sending} disabled={!ready || tooMany} />
           <P muted style={{ fontSize: 13 }}>You won't be charged yet. The host confirms first.</P>
         </>
       )}
       <Link href="/search"><Text style={{ color: colors.water }}>Keep looking</Text></Link>
     </Card>
+  );
+}
+
+function Line({ label, value, bold }: { label: string; value: number; bold?: boolean }) {
+  const st = { fontSize: bold ? 17 : 15, fontWeight: bold ? ('800' as const) : ('400' as const), color: colors.text };
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+      <Text style={[st, { flexShrink: 1 }]}>{label}</Text>
+      <Text style={st}>{value > 0 ? money(value) : 'Quote'}</Text>
+    </View>
+  );
+}
+
+// "Make it a trip": add guided fishing or a cruise on any day of the stay, booked in the same request.
+function AddTrips({ trips, days, addOns, setAddOns }: { trips: Listing[]; days: string[]; addOns: AddOn[]; setAddOns: (a: AddOn[]) => void }) {
+  const [pick, setPick] = useState<Listing | null>(null);
+  const [day, setDay] = useState<string | null>(null);
+  const [time, setTime] = useState('');
+  function add() {
+    if (!pick || !day) return;
+    setAddOns([...addOns, { listing: pick, day, time: time || pick.start_times[0] || '' }]);
+    setPick(null); setDay(null); setTime('');
+  }
+  return (
+    <View style={{ backgroundColor: colors.bg, borderRadius: 10, padding: 12, gap: 8 }}>
+      <Text style={{ fontWeight: '800', color: colors.navy, fontSize: 16 }}>Add a guided trip to your stay</Text>
+      {addOns.map((a, i) => (
+        <Row key={i} gap={8} style={{ justifyContent: 'space-between' }}>
+          <P style={{ flexShrink: 1 }}>{`✓ ${a.listing.title}, ${niceDate(a.day)}${a.time ? `, ${a.time}` : ''}`}</P>
+          <Button small kind="ghost" title="Remove" onPress={() => setAddOns(addOns.filter((_, j) => j !== i))} />
+        </Row>
+      ))}
+      <Row gap={6}>{trips.map((t) => <Chip key={t.id} label={t.title} active={pick?.id === t.id} onPress={() => { setPick(t); setTime(t.start_times[0] ?? ''); }} />)}</Row>
+      {pick ? (
+        <>
+          <P muted>{`${priceLabel(pick)}${pick.duration_hours ? ` · ${pick.duration_hours} hours` : ''}. Which day?`}</P>
+          <Row gap={6}>{days.map((d) => <Chip key={d} label={niceDate(d)} active={day === d} onPress={() => setDay(d)} />)}</Row>
+          {pick.start_times.length > 1 ? <Row gap={6}>{pick.start_times.map((t) => <Chip key={t} label={t} active={time === t} onPress={() => setTime(t)} />)}</Row> : null}
+          <Button small title="Add to my stay" onPress={add} disabled={!day} />
+        </>
+      ) : null}
+    </View>
   );
 }

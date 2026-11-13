@@ -1,10 +1,10 @@
 import { Link } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { ImageBackground, Pressable, Text, View } from 'react-native';
 import { ListingGrid } from '../components/ListingCard';
 import { SearchBox } from '../components/SearchBox';
 import { Container, H2, P, Page, Row, Seo } from '../components/ui';
 import { catalog } from '../lib/catalog';
-import { colors } from '../lib/theme';
+import { colors, PHOTOS } from '../lib/theme';
 import { CATEGORY_LABELS, TRIP_CATEGORIES } from '../lib/types';
 
 export default function Home() {
@@ -20,17 +20,19 @@ export default function Home() {
         jsonLd={{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Premier Booking',
           url: process.env.EXPO_PUBLIC_SITE_URL || 'https://premier-booking.netlify.app' }}
       />
-      <View style={{ backgroundColor: colors.navy2, paddingVertical: 48 }}>
+      <ImageBackground source={{ uri: PHOTOS.hero }} resizeMode="cover" style={{ backgroundColor: colors.navy2 }}>
+        <View style={{ backgroundColor: 'rgba(8,30,48,0.62)', paddingVertical: 64 }}>
         <Container style={{ gap: 14 }}>
           <Text role="heading" aria-level={1} style={{ color: '#fff', fontSize: 40, fontWeight: '800', maxWidth: 720 }}>
-            Your whole coast trip, <Text style={{ color: colors.sun, fontStyle: 'italic' }}>one booking</Text>.
+            Your whole coast trip, <Text style={{ color: colors.accent, fontStyle: 'italic' }}>one booking</Text>.
           </Text>
           <Text style={{ color: '#d3dde6', fontSize: 18, maxWidth: 640, lineHeight: 26 }}>
             Houses for the crew, guides who know the bay, and cruises for everyone else. Pick your area, check the calendar and send your request.
           </Text>
           <SearchBox />
         </Container>
-      </View>
+        </View>
+      </ImageBackground>
 
       <Container style={{ paddingVertical: 12 }}>
         <H2>Things to do</H2>
@@ -66,7 +68,13 @@ export default function Home() {
           ))}
         </Row>
 
-        <View style={{ backgroundColor: colors.sand, borderRadius: 12, padding: 20, marginTop: 28 }}>
+        <ImageBackground source={{ uri: PHOTOS.trout }} resizeMode="cover" imageStyle={{ borderRadius: 12 }} style={{ marginTop: 28, borderRadius: 12, backgroundColor: colors.navy2 }}>
+          <View style={{ backgroundColor: 'rgba(8,30,48,0.6)', borderRadius: 12, padding: 24 }}>
+            <Text style={{ fontSize: 22, fontWeight: '800', color: '#fff' }}>Make it a fishing trip</Text>
+            <Text style={{ color: '#dfe9ee', fontSize: 16, marginTop: 6, maxWidth: 560 }}>Book the house, then add a guided redfish and trout trip on any day of your stay. One request covers it all.</Text>
+          </View>
+        </ImageBackground>
+        <View style={{ backgroundColor: colors.sand, borderRadius: 12, padding: 20, marginTop: 16 }}>
           <Text style={{ fontSize: 20, fontWeight: '700', color: colors.navy }}>Guide or own a house on the coast?</Text>
           <P style={{ marginTop: 6 }}>We work with local guides and owners by invitation. Call 361-210-8494 to list with us.</P>
         </View>

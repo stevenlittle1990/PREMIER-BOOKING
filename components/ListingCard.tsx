@@ -6,8 +6,8 @@ import { colors, radius } from '../lib/theme';
 import { CATEGORY_LABELS, type Listing } from '../lib/types';
 
 const TINTS: Record<string, string> = {
-  house: '#2f5d62', fishing: '#1f7a8c', sunset_cruise: '#c26a2e', beach_cruise: '#b69455',
-  island_tour: '#4f7c5a', bird_watching: '#6d6a9c', hunting: '#6b5a3e', other: '#40576b',
+  house: '#22566b', fishing: '#1b7896', sunset_cruise: '#2b4f7a', beach_cruise: '#3a8f9a',
+  island_tour: '#2f6f6a', bird_watching: '#4f6f8f', hunting: '#3d5566', other: '#40576b',
 };
 
 export function Photo({ listing, height = 190 }: { listing: Listing; height?: number }) {

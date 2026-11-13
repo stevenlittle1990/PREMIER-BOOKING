@@ -45,42 +45,88 @@
    "area_id": "5a74fd9d-63a4-512f-853f-52d5ca8309da",
    "bay_system_id": "68888cac-e4fe-5c13-838c-d054dda63f9e",
    "owner_id": null,
-   "photos": [],
+   "photos": [
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Exteriors/lodge-front-wide.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Exteriors/lodge-aerial-corner.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Interiors/living-room-vaulted-ceiling.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Interiors/kitchen-island.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Exteriors/balcony-bay-view.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Exteriors/covered-outdoor-bar-with-golf-cart.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Exteriors/golf-carts.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Lodge%20Exteriors/lodge-faded-morning-no-lines.jpg"
+   ],
    "price_cents": 0,
    "price_unit": "night",
    "max_guests": 14,
-   "bedrooms": null,
-   "bathrooms": null,
-   "beds": null,
+   "bedrooms": 3,
+   "bathrooms": 3,
+   "beds": 6,
    "min_nights": 2,
    "duration_hours": null,
    "start_times": [],
    "amenities": [
+    "Beach access across the street",
+    "Ocean and bay views",
     "Full kitchen",
+    "Outdoor kitchen",
+    "Covered patio bar with TV",
+    "Wifi",
     "Washer and dryer",
-    "Bay-view balcony",
-    "Covered outdoor bar",
+    "Three porches",
+    "Playscape",
+    "Basketball court",
     "Golf carts on request",
-    "Near Kingfisher Beach",
     "Fish-cleaning table"
    ],
    "species": [],
    "address": "110 East Monroe Ave., Port O'Connor, TX 77982",
    "meeting_point": null,
    "published": true,
-   "summary": "Group lodge near Kingfisher Beach with a bay-view balcony and covered outdoor bar. Sleeps up to 14.",
-   "description": "A basecamp for fishing crews, families and groups, a short walk from Kingfisher Beach and the public pier. The vaulted living room and kitchen island give everyone room to gather, the balcony looks over the bay, and the covered outdoor bar is where the day's catch gets talked about. Pair it with a guided trip and the logistics are handled.",
+   "summary": "Beach house across the street from Kingfisher Beach with three porches, an outdoor kitchen and bar, and room for 14.",
+   "description": "Drink your coffee on one of three porches and watch the sun come up over the beach, which is right across the street. Kids have a playscape and basketball court, Boggy Nature Park is about a ten minute walk, and the covered patio has a bar, seating, a TV and an outdoor kitchen for cooking the day's catch. We work with local guides for fishing trips and boat rides to a private beach you can only reach by water, so you can add those to your stay.",
    "slug": "poc-premier-lodge",
    "kind": "stay",
    "category": "house",
-   "title": "POC Premier Lodge"
+   "title": "POC Premier Lodge",
+   "highlights": [
+    "Across the street from Kingfisher Beach",
+    "Outdoor kitchen and covered bar with TV",
+    "Three porches with sunrise and bay views",
+    "Playscape and basketball court for kids",
+    "Guided fishing and boat trips can be added"
+   ],
+   "rooms": [
+    {
+     "name": "Bedroom 1",
+     "beds": "2 queen beds"
+    },
+    {
+     "name": "Bedroom 2",
+     "beds": "2 bunk beds"
+    },
+    {
+     "name": "Bedroom 3",
+     "beds": "2 queen beds"
+    }
+   ],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   },
   {
    "id": "97ab6694-3ab4-501e-b050-a47ea2499cd1",
    "area_id": "5a74fd9d-63a4-512f-853f-52d5ca8309da",
    "bay_system_id": "68888cac-e4fe-5c13-838c-d054dda63f9e",
    "owner_id": null,
-   "photos": [],
+   "photos": [
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/angler-holding-redfish-action.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/boat-in-clear-water-wide.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/family-group-fishing-catch.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/woman-holding-trout.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/fish-cleaning-table.jpg"
+   ],
    "price_cents": 75000,
    "price_unit": "trip",
    "max_guests": 4,
@@ -112,14 +158,24 @@
    "slug": "inshore-bay-fishing",
    "kind": "trip",
    "category": "fishing",
-   "title": "Inshore Bay Fishing"
+   "title": "Inshore Bay Fishing",
+   "highlights": [],
+   "rooms": [],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   },
   {
    "id": "ec865ed6-7611-5b99-8ec5-ac615fbe67d5",
    "area_id": "5a74fd9d-63a4-512f-853f-52d5ca8309da",
    "bay_system_id": "5ac4032b-32c6-557d-b528-d4db16ac7ac1",
    "owner_id": null,
-   "photos": [],
+   "photos": [
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/wade-fishing-redfish-guest.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/guest-trout-portrait.jpg"
+   ],
    "price_cents": 0,
    "price_unit": "trip",
    "max_guests": 3,
@@ -147,14 +203,24 @@
    "slug": "wade-fishing-the-flats",
    "kind": "trip",
    "category": "fishing",
-   "title": "Wade Fishing the Flats"
+   "title": "Wade Fishing the Flats",
+   "highlights": [],
+   "rooms": [],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   },
   {
    "id": "9e0fb589-c79e-5c6e-94db-2fb5011f458e",
    "area_id": "5a74fd9d-63a4-512f-853f-52d5ca8309da",
    "bay_system_id": "1fa4eaab-ad43-5c6a-a666-52db74fb1582",
    "owner_id": null,
-   "photos": [],
+   "photos": [
+    "https://www.pocpremierlodge.com/Images/Optimized/Area%20Highlights/matagorda-ship-channel.jpg",
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/holding-fish-redfish.jpg"
+   ],
    "price_cents": 0,
    "price_unit": "trip",
    "max_guests": 4,
@@ -180,14 +246,23 @@
    "slug": "jetty-and-drift-fishing",
    "kind": "trip",
    "category": "fishing",
-   "title": "Jetty and Drift Fishing"
+   "title": "Jetty and Drift Fishing",
+   "highlights": [],
+   "rooms": [],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   },
   {
    "id": "2f5942a6-3fd8-5f9f-a58d-a508e2e88fe9",
    "area_id": "5a74fd9d-63a4-512f-853f-52d5ca8309da",
    "bay_system_id": "68888cac-e4fe-5c13-838c-d054dda63f9e",
    "owner_id": null,
-   "photos": [],
+   "photos": [
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/hero-sunset-fishing-rods.jpg"
+   ],
    "price_cents": 0,
    "price_unit": "trip",
    "max_guests": 6,
@@ -209,14 +284,23 @@
    "slug": "sunset-bay-cruise",
    "kind": "trip",
    "category": "sunset_cruise",
-   "title": "Sunset Bay Cruise"
+   "title": "Sunset Bay Cruise",
+   "highlights": [],
+   "rooms": [],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   },
   {
    "id": "d82ca488-d4df-5296-943c-5e3f0700c653",
    "area_id": "5a74fd9d-63a4-512f-853f-52d5ca8309da",
    "bay_system_id": "5ac4032b-32c6-557d-b528-d4db16ac7ac1",
    "owner_id": null,
-   "photos": [],
+   "photos": [
+    "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/charter-boat-clear-water.jpg"
+   ],
    "price_cents": 0,
    "price_unit": "trip",
    "max_guests": 6,
@@ -238,7 +322,14 @@
    "slug": "matagorda-island-beach-cruise",
    "kind": "trip",
    "category": "beach_cruise",
-   "title": "Matagorda Island Beach Day"
+   "title": "Matagorda Island Beach Day",
+   "highlights": [],
+   "rooms": [],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   },
   {
    "id": "21bfdeb8-6b1f-535a-a569-54d92b373c53",
@@ -268,7 +359,14 @@
    "slug": "island-tour",
    "kind": "trip",
    "category": "island_tour",
-   "title": "Island and Bay Tour"
+   "title": "Island and Bay Tour",
+   "highlights": [],
+   "rooms": [],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   },
   {
    "id": "a324c16b-b7a7-56a0-b8d0-38170ca1548d",
@@ -297,7 +395,14 @@
    "slug": "coastal-bird-watching",
    "kind": "trip",
    "category": "bird_watching",
-   "title": "Coastal Bird Watching"
+   "title": "Coastal Bird Watching",
+   "highlights": [],
+   "rooms": [],
+   "house_rules": [],
+   "check_in_time": null,
+   "check_out_time": null,
+   "cleaning_fee_cents": 0,
+   "cancellation_policy": ""
   }
  ],
  "builtAt": "seed"

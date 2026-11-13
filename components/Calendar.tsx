@@ -53,8 +53,8 @@ export function Calendar({ busy, start, end, onChange, range, months = 2, onDayP
       <View style={{ flexDirection: 'row', gap: 14, marginTop: 10, flexWrap: 'wrap' }}>
         <Legend color={colors.navy} label="Selected" />
         <Legend color={colors.busy} label="Booked" />
-        {onDayPress ? <Legend color="#f3d9b5" label="Requested" /> : null}
-        {onDayPress ? <Legend color="#e7c3bf" label="Blocked" /> : null}
+        {onDayPress ? <Legend color={colors.pending} label="Requested" /> : null}
+        {onDayPress ? <Legend color={colors.blocked} label="Blocked" /> : null}
       </View>
     </View>
   );
@@ -95,8 +95,8 @@ function Month({ first, busy, start, end, today, onPress, hostMode }: {
           const blockedForGuest = !hostMode && (past || (mark && mark !== 'requested'));
           const bg = picked ? colors.navy
             : mark === 'booked' ? colors.busy
-            : hostMode && mark === 'requested' ? '#f3d9b5'
-            : hostMode && mark === 'blocked' ? '#e7c3bf'
+            : hostMode && mark === 'requested' ? colors.pending
+            : hostMode && mark === 'blocked' ? colors.blocked
             : !hostMode && mark === 'blocked' ? colors.busy
             : 'transparent';
           return (

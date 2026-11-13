@@ -31,6 +31,13 @@ export type Listing = {
   address: string | null;
   meeting_point: string | null;
   published: boolean;
+  highlights: string[];
+  rooms: { name: string; beds: string }[];
+  house_rules: string[];
+  check_in_time: string | null;
+  check_out_time: string | null;
+  cleaning_fee_cents: number;
+  cancellation_policy: string;
 };
 
 export type Booking = {
@@ -48,6 +55,7 @@ export type Booking = {
   status: 'requested' | 'accepted' | 'declined' | 'cancelled';
   notes: string | null;
   host_note: string | null;
+  group_id: string | null;
   created_at: string;
 };
 
@@ -58,6 +66,13 @@ export type Profile = {
   phone: string | null;
   role: 'admin' | 'partner' | 'guest';
   business_name: string | null;
+  home_city: string | null;
+  marketing_email: boolean;
+  marketing_sms: boolean;
+  marketing_email_at: string | null;
+  marketing_sms_at: string | null;
+  last_booking_at: string | null;
+  created_at: string;
 };
 
 export type Catalog = { areas: Area[]; bays: BaySystem[]; listings: Listing[]; builtAt: string };

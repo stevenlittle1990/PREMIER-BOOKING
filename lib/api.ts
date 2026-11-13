@@ -32,12 +32,28 @@ export async function busyDays(listingId: string, from: string, days = 400): Pro
   return out;
 }
 
-export async function requestBooking(b: Omit<Booking, 'id' | 'status' | 'created_at' | 'host_note' | 'guest_id'>) {
+export type BookingDraft = Omit<Booking, 'id' | 'status' | 'created_at' | 'host_note' | 'guest_id' | 'group_id'>;
+
+// One request, or a stay plus trips sent together (they share a group id so the host sees them as one trip).
+export async function requestBookings(items: BookingDraft[]) {
   if (!supabase) throw new Error('Booking opens once the database is connected.');
   const { data: u } = await supabase.auth.getUser();
   if (!u.user) throw new Error('Please sign in first.');
-  const { error } = await supabase.from('bookings').insert({ ...b, guest_id: u.user.id, status: 'requested' });
+  const group = items.length > 1 ? (globalThis.crypto?.randomUUID?.() ?? null) : null;
+  const { error } = await supabase.from('bookings')
+    .insert(items.map((b) => ({ ...b, guest_id: u.user!.id, status: 'requested', group_id: group })));
   if (error) throw new Error(error.message);
+}
+
+export async function saveMyProfile(patch: Partial<Profile>) {
+  const { data: u } = await supabase!.auth.getUser();
+  const { error } = await supabase!.from('profiles').update(patch).eq('id', u.user!.id);
+  if (error) throw new Error(error.message);
+}
+
+export async function customers(): Promise<Profile[]> {
+  const { data } = await supabase!.from('profiles').select('*').order('created_at', { ascending: false });
+  return (data as Profile[]) ?? [];
 }
 
 export async function myBookings(): Promise<(Booking & { listing: Listing | null })[]> {

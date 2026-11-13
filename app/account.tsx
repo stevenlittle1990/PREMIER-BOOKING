@@ -1,15 +1,15 @@
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
-import { Button, Card, H1, H2, Notice, P, Page, Row, Seo } from '../components/ui';
-import { cancelBooking, myBookings } from '../lib/api';
+import { Switch, Text, View } from 'react-native';
+import { Button, Card, Field, H1, H2, Notice, P, Page, Row, Seo } from '../components/ui';
+import { cancelBooking, myBookings, saveMyProfile } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { listingPath, money, niceDate } from '../lib/format';
 import { colors } from '../lib/theme';
-import type { Booking, Listing } from '../lib/types';
+import type { Booking, Listing, Profile } from '../lib/types';
 
 export const STATUS: Record<Booking['status'], { label: string; color: string }> = {
-  requested: { label: 'Waiting on host', color: colors.sun },
+  requested: { label: 'Waiting on host', color: colors.water },
   accepted: { label: 'Confirmed', color: colors.good },
   declined: { label: 'Declined', color: colors.bad },
   cancelled: { label: 'Cancelled', color: colors.muted },
@@ -30,6 +30,7 @@ export default function Account() {
       <H1>My trips</H1>
       <P muted>{profile?.full_name ? `${profile.full_name} · ` : ''}{session.user.email}</P>
       {isHost ? <View style={{ marginTop: 10, maxWidth: 260 }}><Button title="Open host dashboard" href="/host" kind="secondary" /></View> : null}
+      {profile ? <ProfileCard profile={profile} /> : null}
       <H2>Bookings</H2>
       {rows === null ? <P>Loading…</P> : rows.length === 0 ? <P>No bookings yet. <Link href="/search"><Text style={{ color: colors.water }}>Find a place or a trip</Text></Link></P> : (
         <View style={{ gap: 12 }}>
@@ -49,5 +50,50 @@ export default function Account() {
       )}
       <View style={{ marginTop: 24, maxWidth: 200 }}><Button title="Sign out" kind="ghost" onPress={signOut} /></View>
     </Page>
+  );
+}
+
+function ProfileCard({ profile }: { profile: Profile }) {
+  const { refresh } = useAuth();
+  const [f, setF] = useState({
+    full_name: profile.full_name, phone: profile.phone ?? '', home_city: profile.home_city ?? '',
+    marketing_email: profile.marketing_email, marketing_sms: profile.marketing_sms,
+  });
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null);
+  async function save() {
+    setBusy(true); setMsg(null);
+    try {
+      await saveMyProfile({ ...f, phone: f.phone.trim() || null, home_city: f.home_city.trim() || null });
+      await refresh();
+      setMsg({ tone: 'good', text: 'Saved.' });
+    } catch (e) { setMsg({ tone: 'bad', text: (e as Error).message }); }
+    setBusy(false);
+  }
+  return (
+    <>
+      <H2>Your profile</H2>
+      <Card style={{ maxWidth: 620 }}>
+        <Field label="Name" value={f.full_name} onChangeText={(t) => setF({ ...f, full_name: t })} />
+        <Field label="Mobile phone" keyboardType="phone-pad" value={f.phone} onChangeText={(t) => setF({ ...f, phone: t })} />
+        <Field label="Home city" placeholder="Houston, TX" value={f.home_city} onChangeText={(t) => setF({ ...f, home_city: t })} />
+        <Consent label="Email me deals, open dates and fishing reports" value={f.marketing_email} onChange={(v) => setF({ ...f, marketing_email: v })} />
+        <Consent label="Text me deals and last-minute openings" value={f.marketing_sms} onChange={(v) => setF({ ...f, marketing_sms: v })} />
+        <P muted style={{ fontSize: 13, marginVertical: 8 }}>
+          Booking updates always come to you. Deals are optional: turn them off here any time, reply STOP to a text, or use the unsubscribe link in an email. Message and data rates may apply.
+        </P>
+        {msg ? <Notice tone={msg.tone}>{msg.text}</Notice> : null}
+        <Button title="Save profile" onPress={save} busy={busy} />
+      </Card>
+    </>
+  );
+}
+
+function Consent({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 6 }}>
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.water, false: colors.line }} />
+      <Text style={{ fontSize: 15, color: colors.text, flexShrink: 1 }}>{label}</Text>
+    </View>
   );
 }

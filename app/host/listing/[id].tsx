@@ -9,6 +9,7 @@ import { CATEGORY_LABELS, TRIP_CATEGORIES, type Area, type BaySystem, type Categ
 
 export async function generateStaticParams() { return []; }
 
+const perLine = (s: string) => s.split('\n').map((x) => x.trim()).filter(Boolean);
 const lines = (s: string) => s.split(/\n|,/).map((x) => x.trim()).filter(Boolean);
 
 export default function EditListing() {
@@ -20,9 +21,9 @@ export default function EditListing() {
   const [l, setL] = useState<Partial<Listing>>({
     kind: kindParam === 'trip' ? 'trip' : 'stay', category: kindParam === 'trip' ? 'fishing' : 'house',
     price_unit: kindParam === 'trip' ? 'trip' : 'night', max_guests: kindParam === 'trip' ? 4 : 6, min_nights: 1, published: false,
-    photos: [], amenities: [], species: [], start_times: [],
+    photos: [], amenities: [], species: [], start_times: [], highlights: [], rooms: [], house_rules: [], cleaning_fee_cents: 0, cancellation_policy: '',
   });
-  const [text, setText] = useState({ price: '', photos: '', amenities: '', species: '', times: '' });
+  const [text, setText] = useState({ price: '', photos: '', amenities: '', species: '', times: '', rooms: '', highlights: '', rules: '', cleaning: '' });
   const [loaded, setLoaded] = useState(isNew);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +37,9 @@ export default function EditListing() {
       if (found) {
         setL(found);
         setText({ price: found.price_cents ? String(found.price_cents / 100) : '', photos: found.photos.join('\n'),
-          amenities: found.amenities.join('\n'), species: found.species.join(', '), times: found.start_times.join(', ') });
+          amenities: found.amenities.join('\n'), species: found.species.join(', '), times: found.start_times.join(', '),
+          rooms: (found.rooms ?? []).map((r) => `${r.name}: ${r.beds}`).join('\n'), highlights: (found.highlights ?? []).join('\n'),
+          rules: (found.house_rules ?? []).join('\n'), cleaning: found.cleaning_fee_cents ? String(found.cleaning_fee_cents / 100) : '' });
       }
       setLoaded(true);
     });
@@ -63,6 +66,9 @@ export default function EditListing() {
         price_cents: Math.round((Number(text.price) || 0) * 100),
         photos: lines(text.photos), amenities: text.amenities.split('\n').map((x) => x.trim()).filter(Boolean),
         species: lines(text.species), start_times: lines(text.times),
+        highlights: perLine(text.highlights), house_rules: perLine(text.rules),
+        rooms: perLine(text.rooms).map((r) => { const [n, ...b] = r.split(':'); return { name: n.trim(), beds: b.join(':').trim() }; }),
+        cleaning_fee_cents: Math.round((Number(text.cleaning) || 0) * 100),
         owner_id: l.owner_id ?? session?.user.id ?? null,
       };
       delete (payload as Record<string, unknown>).created_at;
@@ -134,6 +140,19 @@ export default function EditListing() {
           ) : (
             <Field label="Address" value={l.address ?? ''} onChangeText={(t) => set({ address: t })} />
           )}
+          <Field label="Highlights at the top of the page (one per line)" multiline value={text.highlights} onChangeText={(t) => setText({ ...text, highlights: t })} />
+          {isStay ? (
+            <>
+              <Field label="Bedrooms and beds (one per line, like Bedroom 1: 2 queen beds)" multiline value={text.rooms} onChangeText={(t) => setText({ ...text, rooms: t })} />
+              <Row gap={12}>
+                <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Check-in after" placeholder="4:00 PM" value={l.check_in_time ?? ''} onChangeText={(t) => set({ check_in_time: t || null })} /></View>
+                <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Checkout before" placeholder="11:00 AM" value={l.check_out_time ?? ''} onChangeText={(t) => set({ check_out_time: t || null })} /></View>
+                <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Cleaning fee ($)" keyboardType="decimal-pad" value={text.cleaning} onChangeText={(t) => setText({ ...text, cleaning: t })} /></View>
+              </Row>
+            </>
+          ) : null}
+          <Field label="Rules (one per line)" multiline placeholder="No smoking inside" value={text.rules} onChangeText={(t) => setText({ ...text, rules: t })} />
+          <Field label="Cancellation policy" multiline placeholder="Full refund up to 14 days before; weather cancellations always refunded" value={l.cancellation_policy ?? ''} onChangeText={(t) => set({ cancellation_policy: t })} />
           <Field label={isStay ? 'Amenities (one per line)' : "What's included (one per line)"} multiline value={text.amenities} onChangeText={(t) => setText({ ...text, amenities: t })} />
           <Field label="Photo links (one per line, first is the cover)" multiline autoCapitalize="none" value={text.photos} onChangeText={(t) => setText({ ...text, photos: t })} />
         </Card>

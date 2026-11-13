@@ -4,7 +4,7 @@ import { Linking, Platform, Text, View } from 'react-native';
 import { Calendar, type DayMark } from '../../components/Calendar';
 import { Button, Card, Chip, Field, H1, H2, Notice, P, Page, Row, Seo } from '../../components/ui';
 import {
-  allAreas, createInvite, decideBooking, hostBookings, hostCalendar, hostListings, hosts, invites, saveArea, saveBay,
+  allAreas, createInvite, customers, decideBooking, hostBookings, hostCalendar, hostListings, hosts, invites, saveArea, saveBay,
   setRole, slugify, toggleBlocked, type Invite,
 } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
@@ -14,7 +14,7 @@ import { colors } from '../../lib/theme';
 import { CATEGORY_LABELS, type Area, type BaySystem, type Booking, type Listing, type Profile } from '../../lib/types';
 import { STATUS } from '../account';
 
-type Tab = 'requests' | 'calendar' | 'listings' | 'team' | 'areas';
+type Tab = 'requests' | 'calendar' | 'listings' | 'customers' | 'team' | 'areas';
 type BookingRow = Booking & { listing: Listing | null };
 
 export default function HostDashboard() {
@@ -36,7 +36,7 @@ export default function HostDashboard() {
   const pending = bookings.filter((b) => b.status === 'requested');
   const tabs: [Tab, string][] = [
     ['requests', `Requests${pending.length ? ` (${pending.length})` : ''}`], ['calendar', 'Calendar'], ['listings', 'Listings'],
-    ...(isAdmin ? ([['team', 'Guides and owners'], ['areas', 'Areas and bays']] as [Tab, string][]) : []),
+    ...(isAdmin ? ([['customers', 'Customers'], ['team', 'Guides and owners'], ['areas', 'Areas and bays']] as [Tab, string][]) : []),
   ];
   return (
     <Page>
@@ -47,6 +47,7 @@ export default function HostDashboard() {
       {tab === 'requests' ? <Requests bookings={bookings} reload={load} /> : null}
       {tab === 'calendar' ? <Calendars listings={listings} bookings={bookings} /> : null}
       {tab === 'listings' ? <Listings listings={listings} /> : null}
+      {tab === 'customers' && isAdmin ? <Customers /> : null}
       {tab === 'team' && isAdmin ? <Team /> : null}
       {tab === 'areas' && isAdmin ? <Areas /> : null}
     </Page>
@@ -84,6 +85,7 @@ function BookingCard({ b, reload }: { b: BookingRow; reload: () => void }) {
     <Card style={{ gap: 4 }}>
       <Text style={{ color: STATUS[b.status].color, fontWeight: '800' }}>{STATUS[b.status].label}</Text>
       <Text style={{ fontSize: 18, fontWeight: '700', color: colors.navy }}>{b.listing?.title ?? 'Listing'}</Text>
+      {b.group_id ? <Text style={{ color: colors.water, fontWeight: '700' }}>Part of a stay + trip package from this guest</Text> : null}
       <P>{`${when(b)} · ${b.guests} guests${b.total_cents ? ` · ${money(b.total_cents)}` : ''}`}</P>
       <P>{b.guest_name}</P>
       <Row gap={14}>
@@ -238,6 +240,43 @@ function Areas() {
       </Card>
       <P muted>New areas and listings get their own Google-friendly page on the next site build.</P>
       <Link href="/search"><Text style={{ color: colors.water }}>View the site</Text></Link>
+    </View>
+  );
+}
+
+function Customers() {
+  const [rows, setRows] = useState<Profile[]>([]);
+  const [filter, setFilter] = useState<'all' | 'email' | 'sms'>('all');
+  useEffect(() => { customers().then(setRows); }, []);
+  const shown = rows.filter((p) => filter === 'all' || (filter === 'email' ? p.marketing_email : p.marketing_sms));
+  function download() {
+    if (Platform.OS !== 'web') return;
+    const head = ['Name', 'Email', 'Phone', 'Home city', 'Emails OK', 'Texts OK', 'Joined', 'Last booking'];
+    const q = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [head, ...shown.map((p) => [p.full_name, p.email, p.phone, p.home_city, p.marketing_email ? 'yes' : 'no',
+      p.marketing_sms ? 'yes' : 'no', p.created_at?.slice(0, 10), p.last_booking_at?.slice(0, 10)])].map((r) => r.map(q).join(',')).join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = `premier-booking-customers-${filter}.csv`;
+    a.click();
+  }
+  return (
+    <View style={{ gap: 10 }}>
+      <P muted>Everyone with an account. Only send deals to people who opted in.</P>
+      <Row gap={8}>
+        <Chip label={`All (${rows.length})`} active={filter === 'all'} onPress={() => setFilter('all')} />
+        <Chip label={`OK to email (${rows.filter((p) => p.marketing_email).length})`} active={filter === 'email'} onPress={() => setFilter('email')} />
+        <Chip label={`OK to text (${rows.filter((p) => p.marketing_sms).length})`} active={filter === 'sms'} onPress={() => setFilter('sms')} />
+        {Platform.OS === 'web' ? <Button small kind="secondary" title="Download list" onPress={download} /> : null}
+      </Row>
+      {shown.map((p) => (
+        <Card key={p.id} style={{ gap: 2 }}>
+          <Text style={{ fontWeight: '700', fontSize: 16 }}>{p.full_name || p.email}</Text>
+          <P muted>{[p.email, p.phone, p.home_city].filter(Boolean).join(' · ')}</P>
+          <P muted>{`${p.marketing_email ? 'Emails OK' : 'No deal emails'} · ${p.marketing_sms ? 'Texts OK' : 'No deal texts'}${p.last_booking_at ? ` · last request ${p.last_booking_at.slice(0, 10)}` : ''}${p.role !== 'guest' ? ` · ${p.role}` : ''}`}</P>
+        </Card>
+      ))}
+      {!shown.length ? <P muted>No one here yet.</P> : null}
     </View>
   );
 }
