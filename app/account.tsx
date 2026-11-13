@@ -10,7 +10,7 @@ import { colors } from '../lib/theme';
 import type { Booking, Listing, Profile, Waiver } from '../lib/types';
 
 export const STATUS: Record<Booking['status'], { label: string; color: string }> = {
-  requested: { label: 'Waiting on host', color: colors.water },
+  requested: { label: 'Inquiry sent', color: colors.water },
   accepted: { label: 'Confirmed', color: colors.good },
   declined: { label: 'Declined', color: colors.bad },
   cancelled: { label: 'Cancelled', color: colors.muted },
@@ -42,7 +42,6 @@ export default function Account() {
               <Text style={{ color: STATUS[b.status].color, fontWeight: '800' }}>{STATUS[b.status].label}</Text>
               {b.listing ? <Link href={listingPath(b.listing) as never}><Text style={{ fontSize: 18, fontWeight: '700', color: colors.navy }}>{b.listing.title}</Text></Link> : null}
               <P>{b.start_date === b.end_date ? niceDate(b.start_date) : `${niceDate(b.start_date)} → ${niceDate(b.end_date)}`}{b.start_time ? ` · ${b.start_time}` : ''} · {b.guests} guests</P>
-              {b.total_cents ? <P muted>{`Estimated ${money(b.total_cents)}`}</P> : null}
               {b.host_note ? <Notice>{`From the host: ${b.host_note}`}</Notice> : null}
               {b.listing?.kind === 'trip' && (b.status === 'requested' || b.status === 'accepted') ? (
                 waivers.some((w) => w.booking_id === b.id && w.signer_id === session.user.id)

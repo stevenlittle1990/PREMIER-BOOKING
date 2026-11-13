@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { catalog } from '../lib/catalog';
 import { colors, radius } from '../lib/theme';
+import { DateField } from './DateField';
 import { Button, Chip, Field, Row } from './ui';
 
 // Where / what / when / how many. Sends the guest to /search with the choices in the address.
@@ -33,7 +34,7 @@ export function SearchBox({ initial }: { initial?: { area?: string; kind?: strin
       </Row>
       <Row gap={10} style={{ alignItems: 'flex-end' }}>
         <View style={{ flexBasis: 200, flexGrow: 1 }}>
-          <Field label="Date (optional)" placeholder="YYYY-MM-DD" value={date} onChangeText={setDate} />
+          <DateField label="Date" value={date} onChange={setDate} />
         </View>
         <View style={{ flexBasis: 120, flexGrow: 1 }}>
           <Field label="Guests" placeholder="2" keyboardType="number-pad" value={guests} onChangeText={setGuests} />

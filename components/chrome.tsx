@@ -1,5 +1,7 @@
+import { webData } from '../lib/web';
 import { Link } from 'expo-router';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../lib/auth';
 import { colors, maxWidth } from '../lib/theme';
 
@@ -14,25 +16,28 @@ function NavLink({ href, label }: { href: string; label: string }) {
 export function Header() {
   const { session, isHost, isAdmin, profile } = useAuth();
   const guideOnly = isHost && !isAdmin && profile?.team_type !== 'house_owner';
+  const insets = useSafeAreaInsets();
+  const native = Platform.OS !== 'web';
   return (
-    <View style={{ backgroundColor: colors.navy }}>
+    <View style={{ backgroundColor: colors.navy, paddingTop: native ? insets.top : 0 }}>
       <View style={{ width: '100%', maxWidth, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 14,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <Link href="/" asChild>
           <Pressable>
-            <Text data-display="" role="heading" aria-level={2} style={{ color: '#fff', fontSize: 24, letterSpacing: 0.2 }}>
+            <Text {...webData('display')} role="heading" aria-level={2} style={{ color: '#fff', fontSize: 24, letterSpacing: 0.2 }}>
               Premier<Text style={{ color: colors.accent }}> Booking</Text>
             </Text>
           </Pressable>
         </Link>
-        <View style={{ flexDirection: 'row', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+        {native ? null : <View {...webData('desknav')} style={{ flexDirection: 'row', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
           <NavLink href="/search?kind=stay" label="Stays" />
           <NavLink href="/search?kind=trip" label="Trips" />
           <NavLink href="/guides" label="Guides" />
           {isHost && !guideOnly ? <NavLink href="/host" label="Dashboard" /> : null}
           {guideOnly ? <NavLink href="/guide" label="My jobs" /> : null}
           {session ? <NavLink href="/account" label="My trips" /> : <NavLink href="/sign-in" label="Sign in" />}
-        </View>
+        </View>}
+        {native ? null : <View {...webData('phonecall')}><Text style={{ color: '#fff', fontWeight: '700' }} onPress={() => Linking.openURL('tel:3612108494')}>Call</Text></View>}
       </View>
     </View>
   );

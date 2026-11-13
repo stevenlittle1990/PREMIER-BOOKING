@@ -114,7 +114,7 @@ export default function EditListing() {
 
         <Card>
           <Row gap={12}>
-            <View style={{ flexBasis: 160, flexGrow: 1 }}><Field label="Price ($)" keyboardType="decimal-pad" placeholder="Blank = ask for price" value={text.price} onChangeText={(t) => setText({ ...text, price: t })} /></View>
+            <View style={{ flexBasis: 160, flexGrow: 1 }}><Field label="Your rate ($, for quoting; customers never see it)" keyboardType="decimal-pad" placeholder="Optional" value={text.price} onChangeText={(t) => setText({ ...text, price: t })} /></View>
             <View style={{ flexBasis: 220, flexGrow: 1 }}>
               <Text style={lbl}>Price is per</Text>
               <Row gap={8}>

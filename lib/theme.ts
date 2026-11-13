@@ -28,7 +28,11 @@ export const maxWidth = 1120;
 
 // Photos from pocpremierlodge.com used as backgrounds.
 export const PHOTOS = {
-  hero: 'https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/angler-holding-redfish-action.jpg',
+  // Whole redfish and the angler's face, landscape 1600x1066: shown uncropped on the home page.
+  hero: 'https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/holding-fish-redfish.jpg',
+  heroRatio: 1600 / 1066,
+  // Wide scenic shot (no people to crop) for banners.
+  boats: 'https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/charter-boats-shallow-water.jpg',
   trout: 'https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/woman-holding-trout.jpg',
   redfish: 'https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/holding-fish-redfish.jpg',
   water: 'https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/boat-in-clear-water-wide.jpg',

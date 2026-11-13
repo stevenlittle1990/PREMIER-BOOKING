@@ -1,18 +1,22 @@
+import { webData } from '../lib/web';
 import { Link } from 'expo-router';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from 'react-native';
 import { useAuth } from '../lib/auth';
 import { colors, maxWidth, radius } from '../lib/theme';
 import { Footer, Header } from './chrome';
+import { TabBar } from './TabBar';
 
+// Every screen: header, scrolling content, and the phone tab bar pinned at the bottom.
 export function Page({ children, bare }: { children: ReactNode; bare?: boolean }) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <Header />
-        {bare ? children : <Container style={{ paddingVertical: 24 }}>{children}</Container>}
+        {bare ? children : <Container style={{ paddingVertical: 20 }}>{children}</Container>}
         <Footer />
       </ScrollView>
+      <TabBar />
     </View>
   );
 }
@@ -109,7 +113,7 @@ export function Eyebrow({ children, light }: { children: ReactNode; light?: bool
 export function Stat({ value, label, onPress, tone }: { value: string | number; label: string; onPress?: () => void; tone?: 'warn' }) {
   return (
     <Pressable onPress={onPress} style={[s.card, { flexBasis: 150, flexGrow: 1, gap: 2 }]}>
-      <Text data-display="" style={{ fontSize: 30, color: tone === 'warn' ? colors.water : colors.navy }}>{String(value)}</Text>
+      <Text {...webData('display')} style={{ fontSize: 30, color: tone === 'warn' ? colors.water : colors.navy }}>{String(value)}</Text>
       <Text style={{ color: colors.muted, fontSize: 14 }}>{label}</Text>
     </Pressable>
   );
@@ -145,12 +149,12 @@ export const s = StyleSheet.create({
   h1: { fontSize: 34, lineHeight: 42, color: colors.navy, marginBottom: 8 },
   h2: { fontSize: 24, lineHeight: 32, color: colors.navy, marginTop: 22, marginBottom: 10 },
   p: { fontSize: 16, lineHeight: 24, color: colors.text },
-  btn: { paddingHorizontal: 20, paddingVertical: 13, borderRadius: radius, alignItems: 'center', justifyContent: 'center' },
-  btnSmall: { paddingHorizontal: 14, paddingVertical: 8 },
+  btn: { paddingHorizontal: 20, paddingVertical: 14, minHeight: 48, borderRadius: radius, alignItems: 'center', justifyContent: 'center' },
+  btnSmall: { paddingHorizontal: 14, paddingVertical: 10, minHeight: 40 },
   btnText: { fontSize: 16, fontWeight: '700' },
   label: { fontSize: 13, fontWeight: '600', color: colors.muted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: { borderWidth: 1, borderColor: colors.line, borderRadius: radius, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, backgroundColor: '#fff', color: colors.text },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 4, borderWidth: 1, borderColor: colors.line, backgroundColor: '#fff' },
+  chip: { paddingHorizontal: 14, paddingVertical: 10, minHeight: 40, justifyContent: 'center', borderRadius: 4, borderWidth: 1, borderColor: colors.line, backgroundColor: '#fff' },
   card: { backgroundColor: colors.card, borderRadius: radius, borderWidth: 1, borderColor: colors.line, padding: 16 },
   notice: { backgroundColor: '#fff', borderLeftWidth: 4, padding: 12, borderRadius: radius, marginVertical: 8 },
 });

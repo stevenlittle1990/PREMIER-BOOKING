@@ -1,3 +1,4 @@
+import { webData } from '../../lib/web';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Text, View } from 'react-native';
@@ -134,7 +135,7 @@ function JobCard({ j, waivers, reload, canAnswer }: { j: JobRow; waivers: Waiver
       <Text style={{ fontWeight: '800', color: j.status === 'accepted' ? colors.good : j.status === 'declined' ? colors.bad : colors.water }}>
         {j.status === 'accepted' ? 'You accepted' : j.status === 'declined' ? 'You declined' : `New job: ${j.job}`}
       </Text>
-      <Text data-display="" style={{ fontSize: 20, color: colors.navy }}>{l?.title ?? 'Booking'}</Text>
+      <Text {...webData('display')} style={{ fontSize: 20, color: colors.navy }}>{l?.title ?? 'Booking'}</Text>
       <P>{`${b.start_date === b.end_date ? niceDate(b.start_date) : `${niceDate(b.start_date)} → ${niceDate(b.end_date)}`}${b.start_time ? ` · ${b.start_time}` : ''} · ${b.guests} guests`}</P>
       <P>{`Guest: ${b.guest_name}`}</P>
       <Row gap={14}>

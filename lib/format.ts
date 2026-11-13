@@ -3,8 +3,12 @@ import type { Listing } from './types';
 export const money = (cents: number) =>
   '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-export const priceLabel = (l: Pick<Listing, 'price_cents' | 'price_unit'>) =>
-  l.price_cents <= 0 ? 'Ask for price' :
+// Customers never see prices: every booking is an inquiry and Jason sends a quote.
+export const priceLabel = (l: Pick<Listing, 'kind'>) => (l.kind === 'stay' ? 'Inquire for rates' : 'Inquire for a quote');
+
+// Admin only: the rate Jason keeps for quoting.
+export const rateLabel = (l: Pick<Listing, 'price_cents' | 'price_unit'>) =>
+  l.price_cents <= 0 ? 'No rate set' :
   `${money(l.price_cents)} / ${l.price_unit === 'night' ? 'night' : l.price_unit === 'person' ? 'person' : 'trip'}`;
 
 export const listingPath = (l: Pick<Listing, 'kind' | 'slug'>) => (l.kind === 'stay' ? `/stays/${l.slug}` : `/trips/${l.slug}`);

@@ -4,7 +4,7 @@ import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from 'r
 import { busyDays, liveCatalog, listingBySlugLive, requestBookings, type BookingDraft } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { areaById, bayById, catalog } from '../lib/catalog';
-import { addDays, iso, listingPath, money, niceDate, nightsBetween, priceLabel } from '../lib/format';
+import { addDays, iso, listingPath, niceDate, nightsBetween } from '../lib/format';
 import { hasDatabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
 import { CATEGORY_LABELS, type Listing } from '../lib/types';
@@ -34,8 +34,7 @@ export function ListingDetail({ slug }: { slug: string }) {
               containsPlace: { '@type': 'Accommodation', numberOfBedrooms: listing.bedrooms ?? undefined,
                 occupancy: { '@type': 'QuantitativeValue', maxValue: listing.max_guests } } }
           : { '@context': 'https://schema.org', '@type': 'TouristTrip', name: listing.title, description: listing.summary,
-              image: listing.photos.slice(0, 5),
-              offers: listing.price_cents > 0 ? { '@type': 'Offer', price: listing.price_cents / 100, priceCurrency: 'USD' } : undefined }} />
+              image: listing.photos.slice(0, 5)}} />
 
       <Text style={{ color: colors.water, fontWeight: '700' }}>{CATEGORY_LABELS[listing.category]}{where ? ` · ${where}` : ''}</Text>
       <H1>{listing.title}</H1>
@@ -88,8 +87,8 @@ export function ListingDetail({ slug }: { slug: string }) {
                 {listing.check_in_time ? <P>{`Check-in after ${listing.check_in_time}`}</P> : null}
                 {listing.check_out_time ? <P>{`Checkout before ${listing.check_out_time}`}</P> : null}
                 {isStay && listing.min_nights > 1 ? <P>{`${listing.min_nights} night minimum`}</P> : null}
-                {listing.security_deposit_cents ? <P>{`Refundable security deposit: ${money(listing.security_deposit_cents)}, returned within 7 days after checkout`}</P> : null}
-                {isStay ? <P>{listing.pets_allowed ? `Pets welcome${listing.pet_fee_cents ? ` (${money(listing.pet_fee_cents)} refundable deposit per pet)` : ''}` : 'No pets'}</P> : null}
+                {listing.security_deposit_cents ? <P>Refundable security deposit, returned within 7 days after checkout</P> : null}
+                {isStay ? <P>{listing.pets_allowed ? `Pets welcome${listing.pet_fee_cents ? ' (refundable pet deposit)' : ''}` : 'No pets'}</P> : null}
                 {listing.house_rules.map((r) => <P key={r}>• {r}</P>)}
                 {listing.cancellation_policy ? <P>{`Cancellation: ${listing.cancellation_policy}`}</P> : null}
               </View>
@@ -163,11 +162,6 @@ function Gallery({ listing }: { listing: Listing }) {
 
 type AddOn = { listing: Listing; day: string; time: string };
 
-function tripTotal(t: Listing, guests: number) {
-  if (t.price_cents <= 0) return 0;
-  return t.price_unit === 'person' ? t.price_cents * guests : t.price_cents;
-}
-
 function BookingBox({ listing }: { listing: Listing }) {
   const { session, profile } = useAuth();
   const isStay = listing.kind === 'stay';
@@ -195,12 +189,6 @@ function BookingBox({ listing }: { listing: Listing }) {
 
   const nights = isStay && start && end ? nightsBetween(start, end) : 0;
   const people = Number(guests) || 1;
-  const lodging = isStay && listing.price_cents > 0 ? nights * listing.price_cents : 0;
-  const cleaning = isStay && nights > 0 ? listing.cleaning_fee_cents : 0;
-  const tax = isStay ? Math.round(((lodging + cleaning) * Number(listing.tax_pct || 0)) / 100) : 0;
-  const own = isStay ? lodging + cleaning + tax : tripTotal(listing, people);
-  const extras = addOns.reduce((sum, a) => sum + tripTotal(a.listing, people), 0);
-  const total = own + extras;
 
   const ready = isStay ? Boolean(start && end && nights >= listing.min_nights) : Boolean(start);
   const tooMany = people > listing.max_guests;
@@ -218,9 +206,9 @@ function BookingBox({ listing }: { listing: Listing }) {
     const base = { guest_name: name.trim(), guest_email: session?.user.email ?? '', guest_phone: phone.trim(), guests: people, notes: notes.trim() || null };
     const items: BookingDraft[] = [{
       ...base, listing_id: listing.id, start_date: start!, end_date: isStay ? end! : start!,
-      start_time: isStay ? null : time || null, total_cents: own,
+      start_time: isStay ? null : time || null, total_cents: 0,
     }];
-    for (const a of addOns) items.push({ ...base, listing_id: a.listing.id, start_date: a.day, end_date: a.day, start_time: a.time || null, total_cents: tripTotal(a.listing, people) });
+    for (const a of addOns) items.push({ ...base, listing_id: a.listing.id, start_date: a.day, end_date: a.day, start_time: a.time || null, total_cents: 0 });
     try { await requestBookings(items); setSent(true); } catch (e) { setError((e as Error).message); }
     setSending(false);
   }
@@ -228,8 +216,8 @@ function BookingBox({ listing }: { listing: Listing }) {
   if (sent) {
     return (
       <Card>
-        <H2 style={{ marginTop: 0 }}>Request sent</H2>
-        <P>{addOns.length ? 'Your stay and trips went to the host together. ' : ''}The host will check your dates and confirm. You'll see the answer under My trips.</P>
+        <H2 style={{ marginTop: 0 }}>Inquiry sent</H2>
+        <P>{addOns.length ? 'Your stay and trips went over together. ' : ''}We'll check your dates and get back to you with a quote. You'll see the answer under My trips.</P>
         <View style={{ marginTop: 12 }}><Button title="Go to My trips" href="/account" /></View>
       </Card>
     );
@@ -237,7 +225,7 @@ function BookingBox({ listing }: { listing: Listing }) {
 
   return (
     <Card style={{ gap: 10 }}>
-      <Text style={{ fontSize: 22, fontWeight: '800', color: colors.navy }}>{priceLabel(listing)}</Text>
+      <Text role="heading" style={{ fontSize: 22, color: colors.navy }}>Check dates and send an inquiry</Text>
       <Text style={{ fontWeight: '700', color: colors.text }}>
         {isStay ? (start && !end ? 'Now pick your check-out day' : 'Pick check-in and check-out') : 'Pick a day'}
       </Text>
@@ -255,44 +243,22 @@ function BookingBox({ listing }: { listing: Listing }) {
 
       {isStay && ready && trips.length ? <AddTrips trips={trips} days={stayDays} addOns={addOns} setAddOns={setAddOns} /> : null}
 
-      {total > 0 ? (
-        <View style={{ gap: 4, borderTopWidth: 1, borderColor: colors.line, paddingTop: 10 }}>
-          {lodging ? <Line label={`${money(listing.price_cents)} × ${nights} nights`} value={lodging} /> : null}
-          {cleaning ? <Line label="Cleaning fee" value={cleaning} /> : null}
-          {tax ? <Line label={`Taxes (${Number(listing.tax_pct)}%)`} value={tax} /> : null}
-          {!isStay && own ? <Line label={listing.title} value={own} /> : null}
-          {addOns.map((a) => <Line key={a.listing.id + a.day} label={`${a.listing.title}, ${niceDate(a.day)}`} value={tripTotal(a.listing, people)} />)}
-          <Line label="Estimated total" value={total} bold />
-          {addOns.some((a) => a.listing.price_cents <= 0) || (isStay && listing.price_cents <= 0) ? <P muted style={{ fontSize: 13 }}>Items marked "Ask for price" get quoted by the host.</P> : null}
-        </View>
-      ) : null}
-
       {!hasDatabase ? (
         <Notice>Online booking opens soon. Call 361-210-8494 to book these dates.</Notice>
       ) : !session ? (
-        <Button title="Sign in to request" href={`/sign-in?next=${encodeURIComponent(listingPath(listing))}`} disabled={!ready} />
+        <Button title="Sign in to send an inquiry" href={`/sign-in?next=${encodeURIComponent(listingPath(listing))}`} disabled={!ready} />
       ) : (
         <>
           <Field label="Your name" value={name} onChangeText={setName} />
           <Field label="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
           <Field label="Anything the host should know" multiline value={notes} onChangeText={setNotes} />
           {error ? <Notice tone="bad">{error}</Notice> : null}
-          <Button title={addOns.length ? `Request stay + ${addOns.length} trip${addOns.length > 1 ? 's' : ''}` : 'Request to book'} onPress={submit} busy={sending} disabled={!ready || tooMany} />
-          <P muted style={{ fontSize: 13 }}>You won't be charged yet. The host confirms first.</P>
+          <Button title={addOns.length ? `Send inquiry: stay + ${addOns.length} trip${addOns.length > 1 ? 's' : ''}` : 'Send inquiry'} onPress={submit} busy={sending} disabled={!ready || tooMany} />
+          <P muted style={{ fontSize: 13 }}>No payment now. We confirm your dates and send you a quote.</P>
         </>
       )}
       <Link href="/search"><Text style={{ color: colors.water }}>Keep looking</Text></Link>
     </Card>
-  );
-}
-
-function Line({ label, value, bold }: { label: string; value: number; bold?: boolean }) {
-  const st = { fontSize: bold ? 17 : 15, fontWeight: bold ? ('800' as const) : ('400' as const), color: colors.text };
-  return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
-      <Text style={[st, { flexShrink: 1 }]}>{label}</Text>
-      <Text style={st}>{value > 0 ? money(value) : 'Quote'}</Text>
-    </View>
   );
 }
 
@@ -318,7 +284,7 @@ function AddTrips({ trips, days, addOns, setAddOns }: { trips: Listing[]; days: 
       <Row gap={6}>{trips.map((t) => <Chip key={t.id} label={t.title} active={pick?.id === t.id} onPress={() => { setPick(t); setTime(t.start_times[0] ?? ''); }} />)}</Row>
       {pick ? (
         <>
-          <P muted>{`${priceLabel(pick)}${pick.duration_hours ? ` · ${pick.duration_hours} hours` : ''}. Which day?`}</P>
+          <P muted>{`${pick.duration_hours ? `${pick.duration_hours} hours. ` : ''}Which day?`}</P>
           <Row gap={6}>{days.map((d) => <Chip key={d} label={niceDate(d)} active={day === d} onPress={() => setDay(d)} />)}</Row>
           {pick.start_times.length > 1 ? <Row gap={6}>{pick.start_times.map((t) => <Chip key={t} label={t} active={time === t} onPress={() => setTime(t)} />)}</Row> : null}
           <Button small title="Add to my stay" onPress={add} disabled={!day} />

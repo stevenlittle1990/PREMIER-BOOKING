@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
+import { DateField } from '../components/DateField';
 import { ListingGrid } from '../components/ListingCard';
 import { Chip, Field, H1, P, Page, Row, Seo } from '../components/ui';
 import { busyDays, liveCatalog } from '../lib/api';
@@ -81,9 +82,8 @@ export default function Search() {
           </Row>
         ) : null}
         <Row gap={10}>
-          <View style={{ width: 180 }}>
-            <Field label="Date" placeholder="YYYY-MM-DD" key={`d${mounted}`} defaultValue={q.date ?? ''}
-              onEndEditing={(e) => set('date', e.nativeEvent.text || undefined)} onBlur={(e: any) => set('date', e?.target?.value || undefined)} />
+          <View style={{ width: 200 }}>
+            <DateField label="Date" value={q.date ?? ''} onChange={(d) => set('date', d || undefined)} />
           </View>
           <View style={{ width: 120 }}>
             <Field label="Guests" placeholder="Any" keyboardType="number-pad" key={`g${mounted}`} defaultValue={q.guests ?? ''}

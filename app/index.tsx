@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import { ImageBackground, Pressable, Text, View } from 'react-native';
+import { Image, ImageBackground, Pressable, Text, View } from 'react-native';
 import { ListingGrid } from '../components/ListingCard';
 import { SearchBox } from '../components/SearchBox';
 import { Container, H2, P, Page, Row, Seo } from '../components/ui';
@@ -20,19 +20,25 @@ export default function Home() {
         jsonLd={{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Premier Booking',
           url: process.env.EXPO_PUBLIC_SITE_URL || 'https://premier-booking.netlify.app' }}
       />
-      <ImageBackground source={{ uri: PHOTOS.hero }} resizeMode="cover" style={{ backgroundColor: colors.navy2 }}>
-        <View style={{ backgroundColor: 'rgba(8,30,48,0.62)', paddingVertical: 64 }}>
-        <Container style={{ gap: 14 }}>
-          <Text role="heading" aria-level={1} style={{ color: '#fff', fontSize: 40, fontWeight: '800', maxWidth: 720 }}>
-            Your whole coast trip, <Text style={{ color: colors.accent, fontStyle: 'italic' }}>one booking</Text>.
-          </Text>
-          <Text style={{ color: '#d3dde6', fontSize: 18, maxWidth: 640, lineHeight: 26 }}>
-            Houses for the crew, guides who know the bay, and cruises for everyone else. Pick your area, check the calendar and send your request.
-          </Text>
-          <SearchBox />
+      {/* Photo first in the markup: on a phone it sits on top, on a wide screen it moves to the right of the search. */}
+      <View style={{ backgroundColor: colors.navy }}>
+        <Container style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 28, paddingVertical: 28, alignItems: 'center' }}>
+          <View style={{ flexBasis: 420, flexGrow: 1, maxWidth: '100%' }}>
+            <Image source={{ uri: PHOTOS.hero as string }} accessibilityLabel="Guide holding a big redfish on the bay at Port O'Connor"
+              style={{ width: '100%', aspectRatio: PHOTOS.heroRatio as number, borderRadius: 8, backgroundColor: colors.navy2 }} resizeMode="cover" />
+          </View>
+          <View style={{ flexBasis: 420, flexGrow: 1, flexShrink: 1, minWidth: 0, maxWidth: '100%', gap: 14 }}>
+            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.6, textTransform: 'uppercase' }}>Port O'Connor, Texas</Text>
+            <Text role="heading" aria-level={1} style={{ color: '#fff', fontSize: 38, lineHeight: 46 }}>
+              Your whole coast trip, <Text style={{ color: colors.accent, fontStyle: 'italic' }}>one booking</Text>.
+            </Text>
+            <Text style={{ color: '#d3dde6', fontSize: 17, lineHeight: 25 }}>
+              The lodge for the crew, guides who know the bay, and cruises for everyone else. Pick your dates and send an inquiry.
+            </Text>
+            <SearchBox />
+          </View>
         </Container>
-        </View>
-      </ImageBackground>
+      </View>
 
       <Container style={{ paddingVertical: 12 }}>
         <H2>Things to do</H2>
@@ -68,7 +74,7 @@ export default function Home() {
           ))}
         </Row>
 
-        <ImageBackground source={{ uri: PHOTOS.trout }} resizeMode="cover" imageStyle={{ borderRadius: 12 }} style={{ marginTop: 28, borderRadius: 12, backgroundColor: colors.navy2 }}>
+        <ImageBackground source={{ uri: PHOTOS.boats }} resizeMode="cover" imageStyle={{ borderRadius: 8 }} style={{ marginTop: 28, borderRadius: 12, backgroundColor: colors.navy2 }}>
           <View style={{ backgroundColor: 'rgba(8,30,48,0.6)', borderRadius: 12, padding: 24 }}>
             <Text style={{ fontSize: 22, fontWeight: '800', color: '#fff' }}>Make it a fishing trip</Text>
             <Text style={{ color: '#dfe9ee', fontSize: 16, marginTop: 6, maxWidth: 560 }}>Book the house, then add a guided redfish and trout trip on any day of your stay. One request covers it all.</Text>

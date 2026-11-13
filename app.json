@@ -6,8 +6,31 @@
     "orientation": "portrait",
     "scheme": "premierbooking",
     "userInterfaceStyle": "light",
-    "web": { "output": "static", "bundler": "metro" },
-    "plugins": ["expo-router"],
-    "experiments": { "typedRoutes": true }
+    "web": {
+      "output": "static",
+      "bundler": "metro",
+      "favicon": "./public/icons/icon-192.png",
+      "name": "Premier Booking",
+      "themeColor": "#10222f",
+      "backgroundColor": "#f7f4ee"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "icon": "./assets/icon.png",
+    "ios": {
+      "bundleIdentifier": "com.pocpremierlodge.premierbooking",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.pocpremierlodge.premierbooking",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#10222f"
+      }
+    }
   }
 }

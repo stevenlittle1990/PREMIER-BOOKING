@@ -11,7 +11,7 @@ import {
   saveBay, saveSetting, setRole, slugify, team, toggleBlocked, unassign, waiversFor, waiverText, type PendingMember,
 } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
-import { addDays, iso, money, niceDate, priceLabel } from '../../lib/format';
+import { addDays, iso, money, niceDate, rateLabel } from '../../lib/format';
 import { hasDatabase } from '../../lib/supabase';
 import { colors } from '../../lib/theme';
 import {
@@ -144,7 +144,7 @@ function BookingCard({ b, reload, isAdmin, people, crew, signed }: {
   }
   return (
     <Card style={{ gap: 4 }}>
-      <Text style={{ color: STATUS[b.status].color, fontWeight: '800' }}>{STATUS[b.status].label}</Text>
+      <Text style={{ color: STATUS[b.status].color, fontWeight: '800' }}>{b.status === 'requested' ? 'New inquiry' : STATUS[b.status].label}</Text>
       <Text role="heading" style={{ fontSize: 20, color: colors.navy }}>{b.listing?.title ?? 'Listing'}</Text>
       {b.group_id ? <Text style={{ color: colors.water, fontWeight: '700' }}>Part of a stay + trip package from this guest</Text> : null}
       <P>{`${when(b)} · ${b.guests} guests${b.total_cents ? ` · ${money(b.total_cents)}` : ''}`}</P>
@@ -275,7 +275,7 @@ function Listings({ listings }: { listings: Listing[] }) {
         <Card key={l.id} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
           <View style={{ flexShrink: 1 }}>
             <Text style={{ fontSize: 17, fontWeight: '700', color: colors.navy }}>{l.title}</Text>
-            <P muted>{`${CATEGORY_LABELS[l.category]} · ${priceLabel(l)} · ${l.published ? 'Live' : 'Hidden'}`}</P>
+            <P muted>{`${CATEGORY_LABELS[l.category]} · ${rateLabel(l)} · ${l.published ? 'Live' : 'Hidden'}`}</P>
           </View>
           <Button small kind="ghost" title="Edit" href={`/host/listing/${l.id}`} />
         </Card>
