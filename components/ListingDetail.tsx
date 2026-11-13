@@ -1,14 +1,13 @@
 import { Link } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
-import { busyDays, liveCatalog, listingBySlugLive, requestBookings, type BookingDraft } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { busyDays, liveCatalog, listingBySlugLive, type InquiryItem } from '../lib/api';
 import { areaById, bayById, catalog } from '../lib/catalog';
 import { addDays, iso, listingPath, niceDate, nightsBetween } from '../lib/format';
-import { hasDatabase } from '../lib/supabase';
 import { colors } from '../lib/theme';
 import { CATEGORY_LABELS, type Listing } from '../lib/types';
 import { Calendar, type DayMark } from './Calendar';
+import { InquiryForm } from './InquiryForm';
 import { Photo } from './ListingCard';
 import { Button, Card, Chip, Field, H1, H2, Notice, P, Page, Row, Seo } from './ui';
 
@@ -163,7 +162,6 @@ function Gallery({ listing }: { listing: Listing }) {
 type AddOn = { listing: Listing; day: string; time: string };
 
 function BookingBox({ listing }: { listing: Listing }) {
-  const { session, profile } = useAuth();
   const isStay = listing.kind === 'stay';
   const [today, setToday] = useState<string | null>(null);
   const [busy, setBusy] = useState<Record<string, DayMark>>({});
@@ -171,18 +169,12 @@ function BookingBox({ listing }: { listing: Listing }) {
   const [end, setEnd] = useState<string | null>(null);
   const [time, setTime] = useState(listing.start_times[0] ?? '');
   const [guests, setGuests] = useState('2');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<{ guest: { email: string } | null } | null>(null);
   const [trips, setTrips] = useState<Listing[]>([]);
   const [addOns, setAddOns] = useState<AddOn[]>([]);
 
   useEffect(() => { setToday(iso(new Date())); }, []);
   useEffect(() => { if (today) busyDays(listing.id, today).then(setBusy); }, [listing.id, today]);
-  useEffect(() => { if (profile) { setName((n) => n || profile.full_name); setPhone((p) => p || profile.phone || ''); } }, [profile]);
   useEffect(() => {
     if (isStay) liveCatalog().then((c) => setTrips(c.listings.filter((l) => l.kind === 'trip' && l.area_id === listing.area_id)));
   }, [isStay, listing.area_id]);
@@ -199,26 +191,18 @@ function BookingBox({ listing }: { listing: Listing }) {
     return out;
   }, [start, end]);
 
-  async function submit() {
-    setError('');
-    if (!name.trim() || !phone.trim()) return setError('Add your name and a phone number so the host can reach you.');
-    setSending(true);
-    const base = { guest_name: name.trim(), guest_email: session?.user.email ?? '', guest_phone: phone.trim(), guests: people, notes: notes.trim() || null };
-    const items: BookingDraft[] = [{
-      ...base, listing_id: listing.id, start_date: start!, end_date: isStay ? end! : start!,
-      start_time: isStay ? null : time || null, total_cents: 0,
-    }];
-    for (const a of addOns) items.push({ ...base, listing_id: a.listing.id, start_date: a.day, end_date: a.day, start_time: a.time || null, total_cents: 0 });
-    try { await requestBookings(items); setSent(true); } catch (e) { setError((e as Error).message); }
-    setSending(false);
-  }
+  const items = (notes: string): InquiryItem[] => {
+    const out: InquiryItem[] = [{ listing_id: listing.id, start_date: start!, end_date: isStay ? end! : start!, start_time: isStay ? null : time || null, guests: people, notes: notes || null }];
+    for (const a of addOns) out.push({ listing_id: a.listing.id, start_date: a.day, end_date: a.day, start_time: a.time || null, guests: people, notes: notes || null });
+    return out;
+  };
 
   if (sent) {
     return (
       <Card>
-        <H2 style={{ marginTop: 0 }}>Inquiry sent</H2>
-        <P>{addOns.length ? 'Your stay and trips went over together. ' : ''}We'll check your dates and get back to you with a quote. You'll see the answer under My trips.</P>
-        <View style={{ marginTop: 12 }}><Button title="Go to My trips" href="/account" /></View>
+        <H2 style={{ marginTop: 0 }}>Your request is in</H2>
+        <P>{`${addOns.length ? 'Your stay and trips went over together. ' : ''}We'll check your dates and ${sent.guest ? `send your quote to ${sent.guest.email}.` : "get back to you with a quote. You'll see the answer under My trips."}`}</P>
+        {!sent.guest ? <View style={{ marginTop: 12 }}><Button title="Go to My trips" href="/account" /></View> : null}
       </Card>
     );
   }
@@ -243,20 +227,9 @@ function BookingBox({ listing }: { listing: Listing }) {
 
       {isStay && ready && trips.length ? <AddTrips trips={trips} days={stayDays} addOns={addOns} setAddOns={setAddOns} /> : null}
 
-      {!hasDatabase ? (
-        <Notice>Online booking opens soon. Call 361-210-8494 to book these dates.</Notice>
-      ) : !session ? (
-        <Button title="Sign in to send an inquiry" href={`/sign-in?next=${encodeURIComponent(listingPath(listing))}`} disabled={!ready} />
-      ) : (
-        <>
-          <Field label="Your name" value={name} onChangeText={setName} />
-          <Field label="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-          <Field label="Anything the host should know" multiline value={notes} onChangeText={setNotes} />
-          {error ? <Notice tone="bad">{error}</Notice> : null}
-          <Button title={addOns.length ? `Send inquiry: stay + ${addOns.length} trip${addOns.length > 1 ? 's' : ''}` : 'Send inquiry'} onPress={submit} busy={sending} disabled={!ready || tooMany} />
-          <P muted style={{ fontSize: 13 }}>No payment now. We confirm your dates and send you a quote.</P>
-        </>
-      )}
+      <InquiryForm items={items} next={listingPath(listing)} ready={ready && !tooMany}
+        buttonTitle={addOns.length ? `Book your trip today: stay + ${addOns.length} trip${addOns.length > 1 ? 's' : ''}` : 'Book your trip today'}
+        notesLabel="Anything the host should know? (optional)" onSent={(guest) => setSent({ guest })} />
       <Link href="/search"><Text style={{ color: colors.water }}>Keep looking</Text></Link>
     </Card>
   );

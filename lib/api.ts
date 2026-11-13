@@ -298,3 +298,11 @@ export async function bookingById(id: string): Promise<(Booking & { listing: Lis
   const { data } = await supabase!.from('bookings').select('*, listing:listings(*)').eq('id', id).maybeSingle();
   return data as (Booking & { listing: Listing | null }) | null;
 }
+
+// Guest checkout: no account. The database checks the request and files it with no guest login attached.
+export type InquiryItem = Pick<BookingDraft, 'listing_id' | 'start_date' | 'end_date' | 'start_time' | 'guests' | 'notes'>;
+export async function guestInquiry(items: InquiryItem[], contact: { name: string; email: string; phone: string }) {
+  if (!supabase) throw new Error('Booking opens once the database is connected.');
+  const { error } = await supabase.rpc('guest_inquiry', { p_items: items, p_name: contact.name, p_email: contact.email, p_phone: contact.phone });
+  if (error) throw new Error(error.message);
+}

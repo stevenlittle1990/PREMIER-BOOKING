@@ -4,13 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { DateField } from '../components/DateField';
 import { Photo } from '../components/ListingCard';
-import { Button, Card, Eyebrow, Field, H1, H2, Notice, P, Page, Row, Seo } from '../components/ui';
-import { liveCatalog, requestBookings, type BookingDraft } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { Button, Card, Eyebrow, H1, H2, Notice, P, Page, Row, Seo } from '../components/ui';
+import { liveCatalog, type InquiryItem } from '../lib/api';
+import { InquiryForm } from '../components/InquiryForm';
 import { catalog } from '../lib/catalog';
 import { addDays, niceDate } from '../lib/format';
 import { boatsNeeded, decodeItems, encodeItems, LIKES, makePlans, swapOptions, WHO, type Answers, type Like, type Plan, type PlanItem, type Who } from '../lib/plan';
-import { hasDatabase } from '../lib/supabase';
 import { colors, radius } from '../lib/theme';
 import type { Area, Listing } from '../lib/types';
 
@@ -258,49 +257,42 @@ function PlanCard({ plan, a, onPick }: { plan: Plan; a: Answers; onPick: () => v
 }
 
 function PlanDetail({ plan, a, listings, set, back }: { plan: Plan; a: Answers; listings: Listing[]; set: (p: Partial<Q>) => void; back: () => void }) {
-  const { session, profile } = useAuth();
   const [swapping, setSwapping] = useState<PlanItem | null>(null);
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [notes, setNotes] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
-  useEffect(() => { if (profile) { setName((n) => n || profile.full_name); setPhone((p) => p || profile.phone || ''); } }, [profile]);
+  const [sent, setSent] = useState<{ guest: { email: string } | null } | null>(null);
 
   const save = (items: PlanItem[]) => set({ it: encodeItems(items) });
   const here = typeof window !== 'undefined' ? `${window.location.pathname}${window.location.search}` : '/plan';
 
-  async function send() {
-    setError('');
-    if (!a.from) return setError('Pick the day you arrive (go back to "When"). If you are not sure, pick a close day and say your dates are flexible.');
-    if (!name.trim() || !phone.trim()) return setError('Add your name and a phone number so we can reach you.');
-    setBusy(true);
+  const items = (extra: string): InquiryItem[] => {
     const summary = [
       `Trip plan: ${plan.name}.`, `${WHO[a.who].label}, ${a.guests} people.`,
       a.likes.length ? `Likes: ${a.likes.map((l) => LIKES[l].label.toLowerCase()).join(', ')}.` : '',
       a.flexible ? 'Dates are flexible.' : '',
       ...plan.items.filter((i) => boatsNeeded(i.listing, a.guests) > 1).map((i) => `${i.listing.title}: about ${boatsNeeded(i.listing, a.guests)} boats.`),
-      notes.trim(),
+      extra,
     ].filter(Boolean).join(' ');
-    const base = { guest_name: name.trim(), guest_email: session?.user.email ?? '', guest_phone: phone.trim(), guests: a.guests, notes: summary, total_cents: 0 };
-    const items: BookingDraft[] = [];
-    if (plan.stay) items.push({ ...base, listing_id: plan.stay.id, start_date: a.from, end_date: addDays(a.from, a.nights), start_time: null });
+    const out: InquiryItem[] = [];
+    if (plan.stay) out.push({ listing_id: plan.stay.id, start_date: a.from, end_date: addDays(a.from, a.nights), start_time: null, guests: a.guests, notes: summary });
     for (const i of plan.items) {
       const d = addDays(a.from, i.day);
-      items.push({ ...base, listing_id: i.listing.id, start_date: d, end_date: d, start_time: i.time });
+      out.push({ listing_id: i.listing.id, start_date: d, end_date: d, start_time: i.time, guests: a.guests, notes: summary });
     }
-    try { await requestBookings(items); setSent(true); } catch (e) { setError((e as Error).message); }
-    setBusy(false);
-  }
+    return out;
+  };
 
   if (sent) {
     return (
       <Card style={{ gap: 8 }}>
         <Ionicons name="checkmark-circle" size={40} color={colors.good} />
-        <H2 style={{ marginTop: 0 }}>Trip plan sent</H2>
-        <P>{"We'll check the dates, line up your guide, and get back to you with a quote. You'll see the answer under My trips."}</P>
-        <Row><Button title="Go to My trips" href="/account" /></Row>
+        <H2 style={{ marginTop: 0 }}>Your trip request is in</H2>
+        {sent.guest ? (
+          <P>{`We'll check the dates, line up your guide, and send your quote to ${sent.guest.email}. Questions? Call 361-210-8494.`}</P>
+        ) : (
+          <>
+            <P>{"We'll check the dates, line up your guide, and get back to you with a quote. You'll see the answer under My trips."}</P>
+            <Row><Button title="Go to My trips" href="/account" /></Row>
+          </>
+        )}
       </Card>
     );
   }
@@ -327,27 +319,13 @@ function PlanDetail({ plan, a, listings, set, back }: { plan: Plan; a: Answers; 
         </Card>
       ) : null}
 
-      <H2>Send it to us</H2>
+      <H2>Book your trip today</H2>
       <Card>
         {!a.from ? <Notice>{"Add the day you arrive so we can check it."}</Notice> : null}
         {!a.from ? <DateField label="Arriving" value={a.from} onChange={(d) => set({ from: d })} placeholder="Pick a day" /> : null}
-        {!hasDatabase ? (
-          <Notice>Online inquiries open soon. Call 361-210-8494 and tell us this plan.</Notice>
-        ) : !session ? (
-          <>
-            <P style={{ marginBottom: 12 }}>Sign in or make a free account so we can send you the quote.</P>
-            <Button title="Sign in to send this plan" href={`/sign-in?next=${encodeURIComponent(here)}`} />
-          </>
-        ) : (
-          <>
-            <Field label="Your name" value={name} onChangeText={setName} autoComplete="name" />
-            <Field label="Phone" keyboardType="phone-pad" value={phone} onChangeText={setPhone} autoComplete="tel" />
-            <Field label="Anything else? (optional)" multiline placeholder="Kids' ages, a birthday, first time fishing…" value={notes} onChangeText={setNotes} />
-            {error ? <Notice tone="bad">{error}</Notice> : null}
-            <Button title="Send this trip plan" onPress={send} busy={busy} disabled={!plan.items.length && !plan.stay} />
-            <P muted style={{ fontSize: 13, marginTop: 8 }}>No payment now. We confirm the dates and send you a quote.</P>
-          </>
-        )}
+        <InquiryForm items={items} next={here} buttonTitle="Book your trip today" ready={Boolean(plan.items.length || plan.stay)}
+          check={() => (a.from ? null : 'Pick the day you arrive. If you are not sure, pick a close day and say your dates are flexible.')}
+          notesLabel="Anything else? (optional)" notesPlaceholder="Kids' ages, a birthday, first time fishing…" onSent={(guest) => setSent({ guest })} />
       </Card>
       <View style={{ marginTop: 12 }}><Button title="See other ideas" kind="ghost" onPress={back} /></View>
     </>

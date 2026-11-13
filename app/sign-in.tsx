@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Button, Card, Eyebrow, Field, H1, Notice, P, Page, Seo } from '../components/ui';
 import { useAuth } from '../lib/auth';
@@ -10,9 +10,11 @@ type Mode = 'signin' | 'signup' | 'link';
 
 // Customers, guides and the admin all sign in here. Password by default (easy on a phone); an emailed link also works.
 export default function SignIn() {
-  const { next } = useLocalSearchParams<{ next?: string }>();
+  const { next, mode: startMode } = useLocalSearchParams<{ next?: string; mode?: string }>();
   const { session, refresh } = useAuth();
   const [mode, setMode] = useState<Mode>('signin');
+  // "Create an account" buttons open straight on the new-account tab.
+  useEffect(() => { if (startMode === 'signup' || startMode === 'link') setMode(startMode); }, [startMode]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
