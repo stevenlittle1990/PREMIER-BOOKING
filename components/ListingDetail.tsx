@@ -88,6 +88,8 @@ export function ListingDetail({ slug }: { slug: string }) {
                 {listing.check_in_time ? <P>{`Check-in after ${listing.check_in_time}`}</P> : null}
                 {listing.check_out_time ? <P>{`Checkout before ${listing.check_out_time}`}</P> : null}
                 {isStay && listing.min_nights > 1 ? <P>{`${listing.min_nights} night minimum`}</P> : null}
+                {listing.security_deposit_cents ? <P>{`Refundable security deposit: ${money(listing.security_deposit_cents)}, returned within 7 days after checkout`}</P> : null}
+                {isStay ? <P>{listing.pets_allowed ? `Pets welcome${listing.pet_fee_cents ? ` (${money(listing.pet_fee_cents)} refundable deposit per pet)` : ''}` : 'No pets'}</P> : null}
                 {listing.house_rules.map((r) => <P key={r}>• {r}</P>)}
                 {listing.cancellation_policy ? <P>{`Cancellation: ${listing.cancellation_policy}`}</P> : null}
               </View>
@@ -195,7 +197,8 @@ function BookingBox({ listing }: { listing: Listing }) {
   const people = Number(guests) || 1;
   const lodging = isStay && listing.price_cents > 0 ? nights * listing.price_cents : 0;
   const cleaning = isStay && nights > 0 ? listing.cleaning_fee_cents : 0;
-  const own = isStay ? lodging + cleaning : tripTotal(listing, people);
+  const tax = isStay ? Math.round(((lodging + cleaning) * Number(listing.tax_pct || 0)) / 100) : 0;
+  const own = isStay ? lodging + cleaning + tax : tripTotal(listing, people);
   const extras = addOns.reduce((sum, a) => sum + tripTotal(a.listing, people), 0);
   const total = own + extras;
 
@@ -256,6 +259,7 @@ function BookingBox({ listing }: { listing: Listing }) {
         <View style={{ gap: 4, borderTopWidth: 1, borderColor: colors.line, paddingTop: 10 }}>
           {lodging ? <Line label={`${money(listing.price_cents)} × ${nights} nights`} value={lodging} /> : null}
           {cleaning ? <Line label="Cleaning fee" value={cleaning} /> : null}
+          {tax ? <Line label={`Taxes (${Number(listing.tax_pct)}%)`} value={tax} /> : null}
           {!isStay && own ? <Line label={listing.title} value={own} /> : null}
           {addOns.map((a) => <Line key={a.listing.id + a.day} label={`${a.listing.title}, ${niceDate(a.day)}`} value={tripTotal(a.listing, people)} />)}
           <Line label="Estimated total" value={total} bold />

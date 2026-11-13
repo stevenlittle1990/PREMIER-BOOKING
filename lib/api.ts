@@ -166,3 +166,29 @@ export async function allAreas(): Promise<{ areas: Area[]; bays: BaySystem[] }> 
 }
 
 export const slugify = (s: string) => s.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+// Calendar sync with Hostfully, Airbnb, VRBO or Google Calendar ------------------
+export type CalendarLinks = { listing_id: string; import_urls: string[]; synced_at: string | null; sync_error: string | null };
+
+export const exportCalendarUrl = (slug: string) =>
+  `${process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''}/functions/v1/ical?listing=${encodeURIComponent(slug)}`;
+
+export async function calendarLinks(listingId: string): Promise<CalendarLinks | null> {
+  const { data, error } = await supabase!.from('listing_calendars').select('*').eq('listing_id', listingId).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data as CalendarLinks | null;
+}
+
+export async function saveCalendarLinks(listingId: string, urls: string[]) {
+  const { error } = await supabase!.from('listing_calendars').upsert({ listing_id: listingId, import_urls: urls });
+  if (error) throw new Error(error.message);
+}
+
+export async function syncCalendarNow(listingId: string) {
+  const { data, error } = await supabase!.functions.invoke(`ical-sync?listing=${listingId}`, { body: {} });
+  if (error) throw new Error(error.message);
+  const r = (data?.synced ?? {}) as Record<string, { nights?: number; error?: string }>;
+  const first = Object.values(r)[0];
+  if (first?.error) throw new Error(first.error);
+  return first?.nights ?? 0;
+}

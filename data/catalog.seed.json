@@ -109,11 +109,25 @@
      "beds": "2 queen beds"
     }
    ],
-   "house_rules": [],
+   "house_rules": [
+    "Up to 14 guests",
+    "Primary guest must be 25 or older (photo ID required)",
+    "No smoking, vaping or drugs anywhere on the property",
+    "Quiet hours 10 PM to sunrise",
+    "Up to 2 pets, 150 lbs max each ($150 refundable pet deposit per pet)",
+    "Parking on site",
+    "Trash goes in the big cans downstairs; pickup is Tuesday",
+    "Lost keys are a $100 replacement fee",
+    "Extra cleaning after a party is $150"
+   ],
    "check_in_time": null,
    "check_out_time": null,
-   "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cleaning_fee_cents": 25000,
+   "cancellation_policy": "Full refund if you cancel within 36 hours of booking and check-in is at least 30 days away. 50% refund if you cancel at least 20 days before check-in. No refund within 20 days of check-in. If weather, an evacuation or damage makes the house unusable, we cancel and refund you.",
+   "tax_pct": 6,
+   "security_deposit_cents": 50000,
+   "pets_allowed": true,
+   "pet_fee_cents": 15000
   },
   {
    "id": "97ab6694-3ab4-501e-b050-a47ea2499cd1",
@@ -165,7 +179,11 @@
    "check_in_time": null,
    "check_out_time": null,
    "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cancellation_policy": "",
+   "tax_pct": 0,
+   "security_deposit_cents": 0,
+   "pets_allowed": false,
+   "pet_fee_cents": 0
   },
   {
    "id": "ec865ed6-7611-5b99-8ec5-ac615fbe67d5",
@@ -210,7 +228,11 @@
    "check_in_time": null,
    "check_out_time": null,
    "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cancellation_policy": "",
+   "tax_pct": 0,
+   "security_deposit_cents": 0,
+   "pets_allowed": false,
+   "pet_fee_cents": 0
   },
   {
    "id": "9e0fb589-c79e-5c6e-94db-2fb5011f458e",
@@ -253,7 +275,11 @@
    "check_in_time": null,
    "check_out_time": null,
    "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cancellation_policy": "",
+   "tax_pct": 0,
+   "security_deposit_cents": 0,
+   "pets_allowed": false,
+   "pet_fee_cents": 0
   },
   {
    "id": "2f5942a6-3fd8-5f9f-a58d-a508e2e88fe9",
@@ -291,7 +317,11 @@
    "check_in_time": null,
    "check_out_time": null,
    "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cancellation_policy": "",
+   "tax_pct": 0,
+   "security_deposit_cents": 0,
+   "pets_allowed": false,
+   "pet_fee_cents": 0
   },
   {
    "id": "d82ca488-d4df-5296-943c-5e3f0700c653",
@@ -329,7 +359,11 @@
    "check_in_time": null,
    "check_out_time": null,
    "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cancellation_policy": "",
+   "tax_pct": 0,
+   "security_deposit_cents": 0,
+   "pets_allowed": false,
+   "pet_fee_cents": 0
   },
   {
    "id": "21bfdeb8-6b1f-535a-a569-54d92b373c53",
@@ -366,7 +400,11 @@
    "check_in_time": null,
    "check_out_time": null,
    "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cancellation_policy": "",
+   "tax_pct": 0,
+   "security_deposit_cents": 0,
+   "pets_allowed": false,
+   "pet_fee_cents": 0
   },
   {
    "id": "a324c16b-b7a7-56a0-b8d0-38170ca1548d",
@@ -402,7 +440,11 @@
    "check_in_time": null,
    "check_out_time": null,
    "cleaning_fee_cents": 0,
-   "cancellation_policy": ""
+   "cancellation_policy": "",
+   "tax_pct": 0,
+   "security_deposit_cents": 0,
+   "pets_allowed": false,
+   "pet_fee_cents": 0
   }
  ],
  "builtAt": "seed"

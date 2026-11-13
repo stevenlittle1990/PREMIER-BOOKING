@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Switch, Text, View } from 'react-native';
+import { CalendarSync } from '../../../components/CalendarSync';
 import { Button, Card, Chip, Field, H1, Notice, P, Page, Row, Seo } from '../../../components/ui';
 import { allAreas, hostListings, hosts, saveListing, slugify } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
@@ -23,7 +24,7 @@ export default function EditListing() {
     price_unit: kindParam === 'trip' ? 'trip' : 'night', max_guests: kindParam === 'trip' ? 4 : 6, min_nights: 1, published: false,
     photos: [], amenities: [], species: [], start_times: [], highlights: [], rooms: [], house_rules: [], cleaning_fee_cents: 0, cancellation_policy: '',
   });
-  const [text, setText] = useState({ price: '', photos: '', amenities: '', species: '', times: '', rooms: '', highlights: '', rules: '', cleaning: '' });
+  const [text, setText] = useState({ price: '', photos: '', amenities: '', species: '', times: '', rooms: '', highlights: '', rules: '', cleaning: '', deposit: '', petFee: '' });
   const [loaded, setLoaded] = useState(isNew);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -39,7 +40,8 @@ export default function EditListing() {
         setText({ price: found.price_cents ? String(found.price_cents / 100) : '', photos: found.photos.join('\n'),
           amenities: found.amenities.join('\n'), species: found.species.join(', '), times: found.start_times.join(', '),
           rooms: (found.rooms ?? []).map((r) => `${r.name}: ${r.beds}`).join('\n'), highlights: (found.highlights ?? []).join('\n'),
-          rules: (found.house_rules ?? []).join('\n'), cleaning: found.cleaning_fee_cents ? String(found.cleaning_fee_cents / 100) : '' });
+          rules: (found.house_rules ?? []).join('\n'), cleaning: found.cleaning_fee_cents ? String(found.cleaning_fee_cents / 100) : '',
+          deposit: found.security_deposit_cents ? String(found.security_deposit_cents / 100) : '', petFee: found.pet_fee_cents ? String(found.pet_fee_cents / 100) : '' });
       }
       setLoaded(true);
     });
@@ -69,6 +71,9 @@ export default function EditListing() {
         highlights: perLine(text.highlights), house_rules: perLine(text.rules),
         rooms: perLine(text.rooms).map((r) => { const [n, ...b] = r.split(':'); return { name: n.trim(), beds: b.join(':').trim() }; }),
         cleaning_fee_cents: Math.round((Number(text.cleaning) || 0) * 100),
+        security_deposit_cents: Math.round((Number(text.deposit) || 0) * 100),
+        pet_fee_cents: Math.round((Number(text.petFee) || 0) * 100),
+        tax_pct: Number(l.tax_pct) || 0,
         owner_id: l.owner_id ?? session?.user.id ?? null,
       };
       delete (payload as Record<string, unknown>).created_at;
@@ -149,6 +154,15 @@ export default function EditListing() {
                 <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Checkout before" placeholder="11:00 AM" value={l.check_out_time ?? ''} onChangeText={(t) => set({ check_out_time: t || null })} /></View>
                 <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Cleaning fee ($)" keyboardType="decimal-pad" value={text.cleaning} onChangeText={(t) => setText({ ...text, cleaning: t })} /></View>
               </Row>
+              <Row gap={12}>
+                <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Tax (%)" keyboardType="decimal-pad" value={String(l.tax_pct ?? '')} onChangeText={(t) => set({ tax_pct: Number(t) || 0 })} /></View>
+                <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Security deposit ($)" keyboardType="decimal-pad" value={text.deposit} onChangeText={(t) => setText({ ...text, deposit: t })} /></View>
+                <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Pet deposit per pet ($)" keyboardType="decimal-pad" value={text.petFee} onChangeText={(t) => setText({ ...text, petFee: t })} /></View>
+              </Row>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <Switch value={Boolean(l.pets_allowed)} onValueChange={(v) => set({ pets_allowed: v })} trackColor={{ true: colors.water, false: colors.line }} />
+                <Text>Pets allowed</Text>
+              </View>
             </>
           ) : null}
           <Field label="Rules (one per line)" multiline placeholder="No smoking inside" value={text.rules} onChangeText={(t) => setText({ ...text, rules: t })} />
@@ -156,6 +170,8 @@ export default function EditListing() {
           <Field label={isStay ? 'Amenities (one per line)' : "What's included (one per line)"} multiline value={text.amenities} onChangeText={(t) => setText({ ...text, amenities: t })} />
           <Field label="Photo links (one per line, first is the cover)" multiline autoCapitalize="none" value={text.photos} onChangeText={(t) => setText({ ...text, photos: t })} />
         </Card>
+
+        {!isNew && l.id && l.slug ? <CalendarSync listingId={l.id} slug={l.slug} /> : null}
 
         {isAdmin && team.length ? (
           <Card>

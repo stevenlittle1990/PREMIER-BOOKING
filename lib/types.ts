@@ -38,6 +38,10 @@ export type Listing = {
   check_out_time: string | null;
   cleaning_fee_cents: number;
   cancellation_policy: string;
+  tax_pct: number;
+  security_deposit_cents: number;
+  pets_allowed: boolean;
+  pet_fee_cents: number;
 };
 
 export type Booking = {
