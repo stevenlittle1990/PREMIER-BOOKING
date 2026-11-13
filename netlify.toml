@@ -1,0 +1,19 @@
+# Web build of the app (same code as the phone app). Netlify runs this on every push to the linked branch.
+# EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY come from the site's Netlify environment variables.
+[build]
+  publish = "dist"
+  command = "npx expo export --platform web"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Single-page app: every path serves index.html so reloads and deep links work.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/_expo/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

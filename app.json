@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Premier Booking",
+    "slug": "premier-booking",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "premierbooking",
+    "userInterfaceStyle": "light",
+    "web": { "output": "static", "bundler": "metro" },
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": true }
+  }
+}
