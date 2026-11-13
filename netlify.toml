@@ -1,16 +1,33 @@
 # Web build of the app (same code as the phone app). Netlify runs this on every push to the linked branch.
 # EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY come from the site's Netlify environment variables.
+# The build pulls the live listings first so every listing gets its own page that Google can read.
 [build]
   publish = "dist"
-  command = "npx expo export --platform web"
+  command = "node scripts/build-catalog.mjs && npx expo export --platform web && node scripts/sitemap.mjs"
 
 [build.environment]
   NODE_VERSION = "22"
 
-# Single-page app: every path serves index.html so reloads and deep links work.
+# Listings and invites added after the last build still open: serve the page template, which loads the data live.
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/stays/*"
+  to = "/stays/[slug].html"
+  status = 200
+[[redirects]]
+  from = "/trips/*"
+  to = "/trips/[slug].html"
+  status = 200
+[[redirects]]
+  from = "/areas/*"
+  to = "/areas/[area].html"
+  status = 200
+[[redirects]]
+  from = "/join/*"
+  to = "/join/[code].html"
+  status = 200
+[[redirects]]
+  from = "/host/listing/*"
+  to = "/host/listing/[id].html"
   status = 200
 
 [[headers]]

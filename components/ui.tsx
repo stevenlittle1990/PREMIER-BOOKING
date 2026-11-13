@@ -32,6 +32,8 @@ export function Seo({ title, description, path, jsonLd }: { title: string; descr
       <meta property="og:title" content={full} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content="website" />
+      <meta property="og:site_name" content="Premier Booking" />
+      <meta name="theme-color" content="#0a1d2e" />
       {path ? <link rel="canonical" href={`${site}${path}`} /> : null}
       {jsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /> : null}
     </>

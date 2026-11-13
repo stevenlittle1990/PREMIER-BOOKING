@@ -1,0 +1,101 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { Text, View } from 'react-native';
+import { ListingGrid } from '../components/ListingCard';
+import { Chip, Field, H1, P, Page, Row, Seo } from '../components/ui';
+import { busyDays, liveCatalog } from '../lib/api';
+import { catalog } from '../lib/catalog';
+import { colors } from '../lib/theme';
+import { CATEGORY_LABELS, TRIP_CATEGORIES, type Listing } from '../lib/types';
+
+export default function Search() {
+  const params = useLocalSearchParams<{ area?: string; bay?: string; kind?: string; category?: string; date?: string; guests?: string }>();
+  // The page is pre-built without a query, so read the query only after it loads in the browser.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const q: typeof params = mounted ? params : {};
+  const [data, setData] = useState(catalog);
+  const [busyOnDate, setBusyOnDate] = useState<Set<string>>(new Set());
+
+  useEffect(() => { liveCatalog().then((c) => setData({ ...c, builtAt: catalog.builtAt })); }, []);
+
+  const area = data.areas.find((a) => a.slug === q.area);
+  const bays = area ? data.bays.filter((b) => b.area_id === area.id) : data.bays;
+  const bay = data.bays.find((b) => b.slug === q.bay && (!area || b.area_id === area.id));
+
+  const set = (k: string, v?: string) => {
+    const next: Record<string, string> = {};
+    for (const [key, val] of Object.entries(q)) if (typeof val === 'string' && val) next[key] = val;
+    if (v) next[k] = v; else delete next[k];
+    if (k === 'area') delete next.bay;
+    if (k === 'kind') delete next.category;
+    router.setParams({ ...Object.fromEntries(Object.keys(q).map((x) => [x, undefined])), ...next } as never);
+  };
+
+  const results = useMemo(() => data.listings.filter((l: Listing) =>
+    (!area || l.area_id === area.id) &&
+    (!bay || l.bay_system_id === bay.id) &&
+    (!q.kind || l.kind === q.kind) &&
+    (!q.category || l.category === q.category) &&
+    (!q.guests || l.max_guests >= Number(q.guests)) &&
+    !busyOnDate.has(l.id),
+  ), [data, area, bay, q.kind, q.category, q.guests, busyOnDate]);
+
+  // With a date picked, hide anything already taken that day.
+  useEffect(() => {
+    if (!q.date || !/^\d{4}-\d{2}-\d{2}$/.test(q.date)) return setBusyOnDate(new Set());
+    Promise.all(data.listings.map(async (l) => ((await busyDays(l.id, q.date!, 0))[q.date!] ? l.id : null)))
+      .then((ids) => setBusyOnDate(new Set(ids.filter(Boolean) as string[])));
+  }, [q.date, data.listings]);
+
+  const heading = q.kind === 'stay' ? 'Places to stay' : q.kind === 'trip' ? 'Trips and guides' : 'Stays and trips';
+  return (
+    <Page>
+      <Seo title={`${heading}${area ? ` in ${area.name}` : ''}`}
+        description="Search houses, fishing guides, cruises and tours by area, bay system, date and group size." path="/search" />
+      <H1>{heading}{area ? ` in ${area.name}` : ''}</H1>
+
+      <View style={{ gap: 10, marginBottom: 16 }}>
+        <Row gap={8}>
+          <Text style={label}>Area</Text>
+          <Chip label="Any" active={!q.area} onPress={() => set('area')} />
+          {data.areas.map((a) => <Chip key={a.id} label={a.name} active={q.area === a.slug} onPress={() => set('area', a.slug)} />)}
+        </Row>
+        <Row gap={8}>
+          <Text style={label}>Bay</Text>
+          <Chip label="Any" active={!q.bay} onPress={() => set('bay')} />
+          {bays.map((b) => <Chip key={b.id} label={b.name} active={q.bay === b.slug} onPress={() => set('bay', b.slug)} />)}
+        </Row>
+        <Row gap={8}>
+          <Text style={label}>Type</Text>
+          <Chip label="All" active={!q.kind} onPress={() => set('kind')} />
+          <Chip label="Stays" active={q.kind === 'stay'} onPress={() => set('kind', 'stay')} />
+          <Chip label="Trips" active={q.kind === 'trip'} onPress={() => set('kind', 'trip')} />
+        </Row>
+        {q.kind === 'trip' ? (
+          <Row gap={8}>
+            <Text style={label}>Trip</Text>
+            <Chip label="Any" active={!q.category} onPress={() => set('category')} />
+            {TRIP_CATEGORIES.filter((c) => data.listings.some((l) => l.category === c)).map((c) =>
+              <Chip key={c} label={CATEGORY_LABELS[c]} active={q.category === c} onPress={() => set('category', c)} />)}
+          </Row>
+        ) : null}
+        <Row gap={10}>
+          <View style={{ width: 180 }}>
+            <Field label="Date" placeholder="YYYY-MM-DD" key={`d${mounted}`} defaultValue={q.date ?? ''}
+              onEndEditing={(e) => set('date', e.nativeEvent.text || undefined)} onBlur={(e: any) => set('date', e?.target?.value || undefined)} />
+          </View>
+          <View style={{ width: 120 }}>
+            <Field label="Guests" placeholder="Any" keyboardType="number-pad" key={`g${mounted}`} defaultValue={q.guests ?? ''}
+              onBlur={(e: any) => set('guests', e?.target?.value || undefined)} />
+          </View>
+        </Row>
+      </View>
+
+      <P muted style={{ marginBottom: 12 }}>{results.length} {results.length === 1 ? 'result' : 'results'}</P>
+      {results.length ? <ListingGrid listings={results} /> : <P>Nothing matches yet. Try another bay or date.</P>}
+    </Page>
+  );
+}
+
+const label = { width: 54, fontWeight: '700' as const, color: colors.muted, fontSize: 13, textTransform: 'uppercase' as const };
