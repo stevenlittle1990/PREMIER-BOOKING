@@ -22,7 +22,11 @@ export default function SignIn() {
 
   async function sendCode() {
     setError(''); setBusy(true);
-    const { error } = await supabase!.auth.signInWithOtp({ email: email.trim(), options: { data: name ? { full_name: name.trim() } : undefined } });
+    const { error } = await supabase!.auth.signInWithOtp({ email: email.trim(), options: {
+      data: name ? { full_name: name.trim() } : undefined,
+      // The email has a sign-in link (and a code if the template includes one). The link brings them back here.
+      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/sign-in${next ? `?next=${encodeURIComponent(next)}` : ''}` : undefined,
+    } });
     setBusy(false);
     if (error) return setError(error.message);
     setStage('code');
@@ -44,15 +48,15 @@ export default function SignIn() {
         <Card>
           {stage === 'email' ? (
             <>
-              <P muted style={{ marginBottom: 12 }}>We'll email you a code. New here? This makes your account.</P>
+              <P muted style={{ marginBottom: 12 }}>We'll email you a sign-in link. New here? This makes your account.</P>
               <Field label="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
               <Field label="Your name (new accounts)" value={name} onChangeText={setName} />
               {error ? <Notice tone="bad">{error}</Notice> : null}
-              <Button title="Email me a code" onPress={sendCode} busy={busy} disabled={!email.includes('@')} />
+              <Button title="Email me a sign-in link" onPress={sendCode} busy={busy} disabled={!email.includes('@')} />
             </>
           ) : (
             <>
-              <P style={{ marginBottom: 12 }}>{`Enter the code we sent to ${email}.`}</P>
+              <P style={{ marginBottom: 12 }}>{`Check ${email}. Tap the sign-in link in the email, or type the code here if the email has one.`}</P>
               <Field label="Code" keyboardType="number-pad" value={code} onChangeText={setCode} autoFocus />
               {error ? <Notice tone="bad">{error}</Notice> : null}
               <Button title="Sign in" onPress={verify} busy={busy} disabled={code.trim().length < 6} />

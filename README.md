@@ -10,7 +10,8 @@ Book houses, fishing guides and bay trips in one place. Same setup as MHU Fleet:
 
 1. Supabase: run `supabase/migrations/*.sql` in order.
 2. Netlify environment variables: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and later `EXPO_PUBLIC_SITE_URL` (the real domain).
-3. Make the first admin: after Jason signs in once, run `update profiles set role = 'admin' where email = '...';`
+3. The main admin is preset in `preset_roles` (pocpremierlodge@gmail.com) and becomes admin on first sign-in.
+4. Supabase Auth → URL Configuration: Site URL = the live site, and add `<site>/**` to Redirect URLs.
 
 ## Google
 

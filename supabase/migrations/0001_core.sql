@@ -1,7 +1,7 @@
 -- Premier Booking core schema: areas, bay systems, listings (stays + trips), availability, bookings, partners.
 -- Roles: admin (Jason, full control), partner (invited guide or house owner, manages own listings), guest (books).
 
-create extension if not exists btree_gist;
+create extension if not exists btree_gist with schema extensions;
 
 -- People ------------------------------------------------------------------
 create table public.profiles (

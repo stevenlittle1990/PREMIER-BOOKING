@@ -17,6 +17,7 @@ if (!url || !key) {
   writeFileSync(out, readFileSync(seed));
   console.log('catalog: no database settings, using seed data');
 } else {
+  try {
   const [areas, bays, listings] = await Promise.all([
     get('areas?select=*&published=eq.true&order=sort'),
     get('bay_systems?select=*&order=name'),
@@ -24,4 +25,9 @@ if (!url || !key) {
   ]);
   writeFileSync(out, JSON.stringify({ areas, bays, listings, builtAt: new Date().toISOString() }));
   console.log(`catalog: ${areas.length} areas, ${bays.length} bays, ${listings.length} listings`);
+  } catch (e) {
+    // Never fail the deploy over this: pages still load live data in the browser.
+    console.warn('catalog: database unreachable, using seed data:', e.message);
+    writeFileSync(out, readFileSync(seed));
+  }
 }
