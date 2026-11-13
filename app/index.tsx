@@ -1,90 +1,100 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Link } from 'expo-router';
-import { Image, ImageBackground, Pressable, Text, View } from 'react-native';
-import { ListingGrid } from '../components/ListingCard';
-import { SearchBox } from '../components/SearchBox';
-import { Container, H2, P, Page, Row, Seo } from '../components/ui';
+import { ImageBackground, Pressable, Text, View } from 'react-native';
+import { Container, H2, Page, Seo } from '../components/ui';
+import { useAuth } from '../lib/auth';
 import { catalog } from '../lib/catalog';
-import { colors, PHOTOS } from '../lib/theme';
-import { CATEGORY_LABELS, TRIP_CATEGORIES } from '../lib/types';
+import { colors, PHOTOS, radius } from '../lib/theme';
+import type { Category } from '../lib/types';
+
+// The app's start screen: no sales pitch, just "where to", the activities, and "plan a trip for me".
+const ACTIVITIES: { label: string; icon: string; href: string; category?: Category }[] = [
+  { label: 'Places to stay', icon: 'bed-outline', href: '/search?kind=stay' },
+  { label: 'Fishing', icon: 'fish-outline', href: '/search?kind=trip&category=fishing', category: 'fishing' },
+  { label: 'Sunset cruise', icon: 'sunny-outline', href: '/search?kind=trip&category=sunset_cruise', category: 'sunset_cruise' },
+  { label: 'Beach day', icon: 'umbrella-outline', href: '/search?kind=trip&category=beach_cruise', category: 'beach_cruise' },
+  { label: 'Island tour', icon: 'boat-outline', href: '/search?kind=trip&category=island_tour', category: 'island_tour' },
+  { label: 'Bird watching', icon: 'binoculars-outline', href: '/search?kind=trip&category=bird_watching', category: 'bird_watching' },
+];
 
 export default function Home() {
-  const stays = catalog.listings.filter((l) => l.kind === 'stay');
-  const trips = catalog.listings.filter((l) => l.kind === 'trip');
-  const categories = TRIP_CATEGORIES.filter((c) => trips.some((t) => t.category === c));
+  const { profile } = useAuth();
+  const first = profile?.full_name?.split(' ')[0];
+  const offered = ACTIVITIES.filter((a) => !a.category || catalog.listings.some((l) => l.category === a.category));
   return (
     <Page bare>
       <Seo
         title="Premier Booking: houses, fishing guides and bay trips on the Texas coast"
-        description="Book a house, a guided fishing trip, a sunset cruise or an island tour in Port O'Connor, Texas. See open dates and request your booking in one place."
+        description="Book a house, a guided fishing trip, a sunset cruise or an island tour in Port O'Connor, Texas. Or let us plan the whole trip for you."
         path="/"
         jsonLd={{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Premier Booking',
           url: process.env.EXPO_PUBLIC_SITE_URL || 'https://premier-booking.netlify.app' }}
       />
-      {/* Photo first in the markup: on a phone it sits on top, on a wide screen it moves to the right of the search. */}
-      <View style={{ backgroundColor: colors.navy }}>
-        <Container style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', gap: 28, paddingVertical: 28, alignItems: 'center' }}>
-          <View style={{ flexBasis: 420, flexGrow: 1, maxWidth: '100%' }}>
-            <Image source={{ uri: PHOTOS.hero as string }} accessibilityLabel="Guide holding a big redfish on the bay at Port O'Connor"
-              style={{ width: '100%', aspectRatio: PHOTOS.heroRatio as number, borderRadius: 8, backgroundColor: colors.navy2 }} resizeMode="cover" />
-          </View>
-          <View style={{ flexBasis: 420, flexGrow: 1, flexShrink: 1, minWidth: 0, maxWidth: '100%', gap: 14 }}>
-            <Text style={{ color: colors.accent, fontSize: 12, fontWeight: '700', letterSpacing: 1.6, textTransform: 'uppercase' }}>Port O'Connor, Texas</Text>
-            <Text role="heading" aria-level={1} style={{ color: '#fff', fontSize: 38, lineHeight: 46 }}>
-              Your whole coast trip, <Text style={{ color: colors.accent, fontStyle: 'italic' }}>one booking</Text>.
-            </Text>
-            <Text style={{ color: '#d3dde6', fontSize: 17, lineHeight: 25 }}>
-              The lodge for the crew, guides who know the bay, and cruises for everyone else. Pick your dates and send an inquiry.
-            </Text>
-            <SearchBox />
-          </View>
-        </Container>
-      </View>
+      <Container style={{ paddingTop: 20, paddingBottom: 28, maxWidth: 720 }}>
+        <Text style={{ fontSize: 15, color: colors.muted, marginBottom: 2 }}>{first ? `Hi ${first}` : 'Welcome'}</Text>
+        <Text role="heading" aria-level={1} style={{ fontSize: 32, color: colors.navy, marginBottom: 14 }}>Where to?</Text>
 
-      <Container style={{ paddingVertical: 12 }}>
-        <H2>Things to do</H2>
-        <Row gap={10}>
-          {categories.map((c) => (
-            <Link key={c} href={`/search?kind=trip&category=${c}` as never} asChild>
-              <Pressable style={{ backgroundColor: '#fff', borderWidth: 1, borderColor: colors.line, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 }}>
-                <Text style={{ color: colors.navy, fontWeight: '600' }}>{CATEGORY_LABELS[c]}</Text>
-              </Pressable>
-            </Link>
-          ))}
-        </Row>
-
-        <H2>Places to stay</H2>
-        <ListingGrid listings={stays} />
-
-        <H2>Guided trips</H2>
-        <ListingGrid listings={trips.slice(0, 6)} />
-        <View style={{ marginTop: 12 }}>
-          <Link href="/search?kind=trip"><Text style={{ color: colors.water, fontWeight: '700', fontSize: 16 }}>See all trips ›</Text></Link>
-        </View>
-
-        <H2>Areas</H2>
-        <Row gap={16}>
+        <View style={{ gap: 10 }}>
           {catalog.areas.map((a) => (
             <Link key={a.id} href={`/areas/${a.slug}` as never} asChild>
-              <Pressable style={{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: colors.line, padding: 16, flexBasis: 320, flexGrow: 1 }}>
-                <Text style={{ fontSize: 20, fontWeight: '700', color: colors.navy }}>{a.name}</Text>
-                <Text style={{ color: colors.muted, marginBottom: 6 }}>{a.region}</Text>
-                <P>{a.description}</P>
+              <Pressable accessibilityRole="link" style={tile}>
+                <Ionicons name="location-outline" size={24} color={colors.water} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 18, fontWeight: '700', color: colors.navy }}>{a.name}</Text>
+                  <Text style={{ fontSize: 14, color: colors.muted }}>{a.region}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.muted} />
               </Pressable>
             </Link>
           ))}
-        </Row>
-
-        <ImageBackground source={{ uri: PHOTOS.boats }} resizeMode="cover" imageStyle={{ borderRadius: 8 }} style={{ marginTop: 28, borderRadius: 12, backgroundColor: colors.navy2 }}>
-          <View style={{ backgroundColor: 'rgba(8,30,48,0.6)', borderRadius: 12, padding: 24 }}>
-            <Text style={{ fontSize: 22, fontWeight: '800', color: '#fff' }}>Make it a fishing trip</Text>
-            <Text style={{ color: '#dfe9ee', fontSize: 16, marginTop: 6, maxWidth: 560 }}>Book the house, then add a guided redfish and trout trip on any day of your stay. One request covers it all.</Text>
-          </View>
-        </ImageBackground>
-        <View style={{ backgroundColor: colors.sand, borderRadius: 12, padding: 20, marginTop: 16 }}>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: colors.navy }}>Guide or own a house on the coast?</Text>
-          <P style={{ marginTop: 6 }}>We work with local guides and owners by invitation. Call 361-210-8494 to list with us.</P>
+          <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>More coast towns coming soon.</Text>
         </View>
+
+        <Link href="/plan" asChild>
+          <Pressable accessibilityRole="link" style={{ marginTop: 22, borderRadius: radius + 6, overflow: 'hidden', backgroundColor: colors.navy }}>
+            <ImageBackground source={{ uri: PHOTOS.water }} resizeMode="cover" style={{ backgroundColor: colors.navy2 }}>
+              <View style={{ backgroundColor: 'rgba(16,34,47,0.72)', padding: 20, gap: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="sparkles" size={20} color={colors.accent} />
+                  <Text style={{ color: colors.accent, fontWeight: '800', letterSpacing: 1.2, fontSize: 12, textTransform: 'uppercase' }}>Not sure what to do?</Text>
+                </View>
+                <Text style={{ color: '#fff', fontSize: 26, fontWeight: '700' }}>Plan a trip for me</Text>
+                <Text style={{ color: '#d3dde6', fontSize: 16, lineHeight: 22 }}>
+                  Answer three quick questions and we'll put together a place to stay and things to do. Change anything you like.
+                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, alignSelf: 'flex-start', backgroundColor: '#fff', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 }}>
+                  <Text style={{ color: colors.navy, fontWeight: '800', fontSize: 15 }}>Start planning</Text>
+                  <Ionicons name="arrow-forward" size={16} color={colors.navy} />
+                </View>
+              </View>
+            </ImageBackground>
+          </Pressable>
+        </Link>
+
+        <H2>Activities</H2>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+          {offered.map((a) => (
+            <Link key={a.label} href={a.href as never} asChild>
+              <Pressable accessibilityRole="link" style={{ flexBasis: '46%', flexGrow: 1, minHeight: 92, backgroundColor: '#fff', borderRadius: radius + 4,
+                borderWidth: 1, borderColor: colors.line, padding: 14, justifyContent: 'space-between', gap: 8 }}>
+                <Ionicons name={a.icon as never} size={28} color={colors.water} />
+                <Text style={{ fontSize: 16, fontWeight: '700', color: colors.navy }}>{a.label}</Text>
+              </Pressable>
+            </Link>
+          ))}
+        </View>
+
+        <Link href="/account" asChild>
+          <Pressable accessibilityRole="link" style={{ ...tile, marginTop: 22 }}>
+            <Ionicons name="calendar-outline" size={24} color={colors.water} />
+            <Text style={{ flex: 1, fontSize: 16, fontWeight: '700', color: colors.navy }}>My trips and waivers</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+          </Pressable>
+        </Link>
       </Container>
     </Page>
   );
 }
+
+const tile = { flexDirection: 'row' as const, alignItems: 'center' as const, gap: 14, minHeight: 64, paddingHorizontal: 16, paddingVertical: 12,
+  backgroundColor: '#fff', borderRadius: radius + 4, borderWidth: 1, borderColor: colors.line };

@@ -16,6 +16,7 @@ export function TabBar() {
   const guideOnly = isHost && !isAdmin && profile?.team_type !== 'house_owner';
   const tabs: Tab[] = [
     { href: '/', label: 'Explore', icon: 'compass-outline', match: (p) => p === '/' || p.startsWith('/stays') || p.startsWith('/trips') || p.startsWith('/areas') },
+    { href: '/plan', label: 'Plan', icon: 'sparkles-outline', match: (p) => p.startsWith('/plan') },
     { href: '/search', label: 'Search', icon: 'search-outline', match: (p) => p.startsWith('/search') },
     ...(isHost ? [guideOnly
       ? { href: '/guide', label: 'My jobs', icon: 'boat-outline', match: (p: string) => p.startsWith('/guide/') || p === '/guide' } as Tab

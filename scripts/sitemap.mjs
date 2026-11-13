@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 
 const site = (process.env.EXPO_PUBLIC_SITE_URL || process.env.URL || 'https://premier-booking.netlify.app').replace(/\/$/, '');
 const catalog = JSON.parse(readFileSync(new URL('../data/catalog.json', import.meta.url), 'utf8'));
-const paths = ['/', '/search', '/guides', ...catalog.areas.map((a) => `/areas/${a.slug}`),
+const paths = ['/', '/search', '/plan', '/guides', ...catalog.areas.map((a) => `/areas/${a.slug}`),
   ...catalog.listings.map((l) => (l.kind === 'stay' ? `/stays/${l.slug}` : `/trips/${l.slug}`))];
 const today = new Date().toISOString().slice(0, 10);
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
