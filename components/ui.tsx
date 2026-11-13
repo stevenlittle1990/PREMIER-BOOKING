@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View, type TextInputProps, type ViewStyle } from 'react-native';
+import { useAuth } from '../lib/auth';
 import { colors, maxWidth, radius } from '../lib/theme';
 import { Footer, Header } from './chrome';
 
@@ -33,7 +34,7 @@ export function Seo({ title, description, path, jsonLd }: { title: string; descr
       <meta property="og:description" content={description} />
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="Premier Booking" />
-      <meta name="theme-color" content="#0a1d2e" />
+      <meta name="theme-color" content="#10222f" />
       {path ? <link rel="canonical" href={`${site}${path}`} /> : null}
       {jsonLd ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} /> : null}
     </>
@@ -46,8 +47,8 @@ export function H1({ children }: { children: ReactNode }) {
 export function H2({ children, style }: { children: ReactNode; style?: object }) {
   return <Text role="heading" aria-level={2} style={[s.h2, style]}>{children}</Text>;
 }
-export function P({ children, muted, style }: { children: ReactNode; muted?: boolean; style?: object }) {
-  return <Text style={[s.p, muted && { color: colors.muted }, style]}>{children}</Text>;
+export function P({ children, muted, style, selectable }: { children: ReactNode; muted?: boolean; style?: object; selectable?: boolean }) {
+  return <Text selectable={selectable} style={[s.p, muted && { color: colors.muted }, style]}>{children}</Text>;
 }
 
 export function Button({ title, onPress, kind = 'primary', disabled, busy, href, small }: {
@@ -60,8 +61,9 @@ export function Button({ title, onPress, kind = 'primary', disabled, busy, href,
     <Pressable
       onPress={onPress}
       disabled={disabled || busy}
-      style={({ pressed }) => [s.btn, small && s.btnSmall, { backgroundColor: bg, opacity: disabled ? 0.45 : pressed ? 0.8 : 1 },
-        kind === 'ghost' && { borderWidth: 1, borderColor: colors.line }]}
+      // Plain style (not a function): Link asChild drops function styles, which hid link buttons' backgrounds.
+      style={StyleSheet.flatten([s.btn, small && s.btnSmall, { backgroundColor: bg, opacity: disabled ? 0.45 : 1 },
+        kind === 'ghost' && { borderWidth: 1, borderColor: colors.line }])}
     >
       {busy ? <ActivityIndicator color={fg} /> : <Text style={[s.btnText, small && { fontSize: 14 }, { color: fg }]}>{title}</Text>}
     </Pressable>
@@ -99,20 +101,56 @@ export function Notice({ children, tone = 'info' }: { children: ReactNode; tone?
   );
 }
 
+// Small uppercase label over a heading, like the website's section labels.
+export function Eyebrow({ children, light }: { children: ReactNode; light?: boolean }) {
+  return <Text style={{ fontSize: 12, fontWeight: '700', letterSpacing: 1.6, textTransform: 'uppercase', color: light ? colors.accent : colors.water, marginBottom: 6 }}>{children}</Text>;
+}
+
+export function Stat({ value, label, onPress, tone }: { value: string | number; label: string; onPress?: () => void; tone?: 'warn' }) {
+  return (
+    <Pressable onPress={onPress} style={[s.card, { flexBasis: 150, flexGrow: 1, gap: 2 }]}>
+      <Text data-display="" style={{ fontSize: 30, color: tone === 'warn' ? colors.water : colors.navy }}>{String(value)}</Text>
+      <Text style={{ color: colors.muted, fontSize: 14 }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+// Which dashboard you're looking at. Admins can flip between all three; guides between Guide and Customer.
+export function ViewTabs({ current }: { current: 'admin' | 'guide' | 'customer' }) {
+  const { isAdmin, isHost, profile } = useAuth();
+  const isGuide = isHost && !isAdmin;
+  if (!isAdmin && !isGuide) return null;
+  const tabs: ['admin' | 'guide' | 'customer', string, string][] = [
+    ...(isAdmin ? [['admin', 'Admin', '/host'] as ['admin', string, string]] : profile?.team_type === 'house_owner' ? [['admin', 'My houses', '/host'] as ['admin', string, string]] : []),
+    ['guide', 'Guide', '/guide'], ['customer', 'Customer', '/account'],
+  ];
+  return (
+    <View style={{ flexDirection: 'row', alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.line, borderRadius: radius, overflow: 'hidden', marginBottom: 14, backgroundColor: '#fff' }}>
+      {tabs.map(([k, label, href]) => (
+        <Link key={k} href={href as never} asChild>
+          <Pressable style={{ paddingHorizontal: 16, paddingVertical: 9, backgroundColor: current === k ? colors.navy : 'transparent' }}>
+            <Text style={{ color: current === k ? '#fff' : colors.text, fontWeight: '700', fontSize: 14 }}>{label}</Text>
+          </Pressable>
+        </Link>
+      ))}
+    </View>
+  );
+}
+
 export function Row({ children, style, gap = 12 }: { children: ReactNode; style?: ViewStyle; gap?: number }) {
   return <View style={[{ flexDirection: 'row', flexWrap: 'wrap', gap, alignItems: 'center' }, style]}>{children}</View>;
 }
 
 export const s = StyleSheet.create({
-  h1: { fontSize: 32, fontWeight: '800', color: colors.navy, marginBottom: 8 },
-  h2: { fontSize: 22, fontWeight: '700', color: colors.navy, marginTop: 20, marginBottom: 10 },
+  h1: { fontSize: 34, lineHeight: 42, color: colors.navy, marginBottom: 8 },
+  h2: { fontSize: 24, lineHeight: 32, color: colors.navy, marginTop: 22, marginBottom: 10 },
   p: { fontSize: 16, lineHeight: 24, color: colors.text },
   btn: { paddingHorizontal: 20, paddingVertical: 13, borderRadius: radius, alignItems: 'center', justifyContent: 'center' },
   btnSmall: { paddingHorizontal: 14, paddingVertical: 8 },
   btnText: { fontSize: 16, fontWeight: '700' },
   label: { fontSize: 13, fontWeight: '600', color: colors.muted, marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: { borderWidth: 1, borderColor: colors.line, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, backgroundColor: '#fff', color: colors.text },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1, borderColor: colors.line, backgroundColor: '#fff' },
+  input: { borderWidth: 1, borderColor: colors.line, borderRadius: radius, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, backgroundColor: '#fff', color: colors.text },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 4, borderWidth: 1, borderColor: colors.line, backgroundColor: '#fff' },
   card: { backgroundColor: colors.card, borderRadius: radius, borderWidth: 1, borderColor: colors.line, padding: 16 },
-  notice: { backgroundColor: '#fff', borderLeftWidth: 4, padding: 12, borderRadius: 8, marginVertical: 8 },
+  notice: { backgroundColor: '#fff', borderLeftWidth: 4, padding: 12, borderRadius: radius, marginVertical: 8 },
 });

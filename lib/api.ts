@@ -1,7 +1,7 @@
 import { catalog } from './catalog';
 import { addDays } from './format';
 import { supabase } from './supabase';
-import type { Area, BaySystem, Booking, Listing, Profile } from './types';
+import type { Area, Assignment, BaySystem, Booking, Listing, Notification, Profile, TaxForm, Waiver } from './types';
 import type { DayMark } from '../components/Calendar';
 
 // Everything that talks to the database lives here. Without a database, reads fall back to the built-in catalog.
@@ -167,28 +167,134 @@ export async function allAreas(): Promise<{ areas: Area[]; bays: BaySystem[] }> 
 
 export const slugify = (s: string) => s.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-// Calendar sync with Hostfully, Airbnb, VRBO or Google Calendar ------------------
-export type CalendarLinks = { listing_id: string; import_urls: string[]; synced_at: string | null; sync_error: string | null };
 
-export const exportCalendarUrl = (slug: string) =>
-  `${process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''}/functions/v1/ical?listing=${encodeURIComponent(slug)}`;
+// Team: guides, house owners, staff ------------------------------------------------------
+export type PendingMember = { email: string; full_name: string | null; phone: string | null; team_type: Profile['team_type']; worker_type: Profile['worker_type']; created_at: string };
 
-export async function calendarLinks(listingId: string): Promise<CalendarLinks | null> {
-  const { data, error } = await supabase!.from('listing_calendars').select('*').eq('listing_id', listingId).maybeSingle();
-  if (error) throw new Error(error.message);
-  return data as CalendarLinks | null;
+export async function team(): Promise<{ members: Profile[]; waiting: PendingMember[]; forms: TaxForm[] }> {
+  const [m, p, f] = await Promise.all([
+    supabase!.from('profiles').select('*').in('role', ['admin', 'partner']).order('full_name'),
+    supabase!.from('preset_roles').select('*').order('created_at', { ascending: false }),
+    supabase!.from('tax_forms').select(TAX_COLS),
+  ]);
+  const members = (m.data as Profile[]) ?? [];
+  const known = new Set(members.map((x) => (x.email ?? '').toLowerCase()));
+  const waiting = ((p.data as PendingMember[]) ?? []).filter((x) => !known.has(x.email.toLowerCase()));
+  return { members, waiting, forms: (f.data as unknown as TaxForm[]) ?? [] };
 }
 
-export async function saveCalendarLinks(listingId: string, urls: string[]) {
-  const { error } = await supabase!.from('listing_calendars').upsert({ listing_id: listingId, import_urls: urls });
+export async function addTeamMember(m: { email: string; name: string; phone: string; team_type: string; worker_type: string }) {
+  const { data, error } = await supabase!.rpc('add_team_member', {
+    p_email: m.email, p_name: m.name, p_phone: m.phone, p_team_type: m.team_type, p_worker_type: m.worker_type,
+  });
+  if (error) throw new Error(error.message);
+  return data as boolean; // true when they already had an account
+}
+
+export async function profileById(id: string): Promise<Profile | null> {
+  const { data } = await supabase!.from('profiles').select('*').eq('id', id).maybeSingle();
+  return data as Profile | null;
+}
+
+export async function publicTeam(): Promise<Pick<Profile, 'id' | 'full_name' | 'bio' | 'photo_url' | 'team_type'>[]> {
+  if (!supabase) return [];
+  const { data } = await supabase.rpc('public_team');
+  return (data as never[]) ?? [];
+}
+
+// W-9 -----------------------------------------------------------------------------------
+const TAX_COLS = 'profile_id, legal_name, business_name, tax_class, address, city_state_zip, tin_type, tin_last4, signature_name, signed_at';
+
+export async function myTaxForm(userId: string): Promise<TaxForm | null> {
+  const { data } = await supabase!.from('tax_forms').select(TAX_COLS).eq('profile_id', userId).maybeSingle();
+  return data as unknown as TaxForm | null;
+}
+
+export async function saveW9(f: { legal_name: string; business_name: string; tax_class: string; address: string; city_state_zip: string; tin_type: string; tin: string; signature_name: string }) {
+  const { data, error } = await supabase!.rpc('save_w9', {
+    p_legal_name: f.legal_name, p_business_name: f.business_name, p_tax_class: f.tax_class, p_address: f.address,
+    p_city_state_zip: f.city_state_zip, p_tin_type: f.tin_type, p_tin: f.tin, p_signature_name: f.signature_name,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
+export async function revealTin(profileId: string) {
+  const { data, error } = await supabase!.rpc('reveal_tin', { p_profile: profileId });
+  if (error) throw new Error(error.message);
+  return data as string | null;
+}
+
+// Jobs (booking assignments) --------------------------------------------------------------
+export type JobRow = Assignment & { booking: (Booking & { listing: Listing | null }) | null };
+
+export async function assignmentsFor(bookingIds: string[]): Promise<Assignment[]> {
+  if (!bookingIds.length) return [];
+  const { data } = await supabase!.from('booking_assignments').select('*').in('booking_id', bookingIds);
+  return (data as Assignment[]) ?? [];
+}
+
+export async function assign(bookingId: string, assigneeId: string, job: string) {
+  const { data: u } = await supabase!.auth.getUser();
+  const { error } = await supabase!.from('booking_assignments').insert({ booking_id: bookingId, assignee_id: assigneeId, job, assigned_by: u.user?.id });
+  if (error) throw new Error(error.message.includes('duplicate') ? 'They are already on this booking.' : error.message);
+}
+
+export async function unassign(id: string) {
+  const { error } = await supabase!.from('booking_assignments').delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 
-export async function syncCalendarNow(listingId: string) {
-  const { data, error } = await supabase!.functions.invoke(`ical-sync?listing=${listingId}`, { body: {} });
+export async function jobsFor(userId: string): Promise<JobRow[]> {
+  const { data, error } = await supabase!.from('booking_assignments').select('*, booking:bookings(*, listing:listings(*))')
+    .eq('assignee_id', userId).order('created_at', { ascending: false });
   if (error) throw new Error(error.message);
-  const r = (data?.synced ?? {}) as Record<string, { nights?: number; error?: string }>;
-  const first = Object.values(r)[0];
-  if (first?.error) throw new Error(first.error);
-  return first?.nights ?? 0;
+  return ((data as JobRow[]) ?? []).filter((j) => j.booking).sort((a, b) => a.booking!.start_date.localeCompare(b.booking!.start_date));
+}
+
+export async function respondJob(id: string, accept: boolean, note?: string) {
+  const { error } = await supabase!.rpc('respond_assignment', { p_id: id, p_accept: accept, p_note: note || null });
+  if (error) throw new Error(error.message);
+}
+
+// Notifications ---------------------------------------------------------------------------
+export async function myNotifications(limit = 30): Promise<Notification[]> {
+  if (!supabase) return [];
+  const { data } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(limit);
+  return (data as Notification[]) ?? [];
+}
+
+export async function markAllRead() {
+  const { error } = await supabase!.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null);
+  if (error) throw new Error(error.message);
+}
+
+// Waivers -----------------------------------------------------------------------------------
+export async function waiverText(): Promise<string> {
+  const { data } = await supabase!.from('app_settings').select('value').eq('key', 'waiver_text').maybeSingle();
+  return (data?.value as string) ?? '';
+}
+
+export async function saveSetting(key: string, value: string) {
+  const { error } = await supabase!.from('app_settings').upsert({ key, value, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+}
+
+export async function waiversFor(bookingIds: string[]): Promise<Waiver[]> {
+  if (!bookingIds.length) return [];
+  const { data } = await supabase!.from('waivers').select('id, booking_id, signer_id, signer_name, minors, signed_at').in('booking_id', bookingIds);
+  return (data as Waiver[]) ?? [];
+}
+
+export async function signWaiver(bookingId: string, signerName: string, minors: string, text: string) {
+  const { data: u } = await supabase!.auth.getUser();
+  const { error } = await supabase!.from('waivers').insert({
+    booking_id: bookingId, signer_id: u.user?.id, signer_name: signerName, signer_email: u.user?.email, minors: minors || null, waiver_text: text,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function bookingById(id: string): Promise<(Booking & { listing: Listing | null }) | null> {
+  const { data } = await supabase!.from('bookings').select('*, listing:listings(*)').eq('id', id).maybeSingle();
+  return data as (Booking & { listing: Listing | null }) | null;
 }

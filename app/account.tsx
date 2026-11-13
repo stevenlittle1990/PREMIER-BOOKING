@@ -1,12 +1,13 @@
 import { Link } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Switch, Text, View } from 'react-native';
-import { Button, Card, Field, H1, H2, Notice, P, Page, Row, Seo } from '../components/ui';
-import { cancelBooking, myBookings, saveMyProfile } from '../lib/api';
+import { Notifications } from '../components/Notifications';
+import { Button, Card, Eyebrow, Field, H1, H2, Notice, P, Page, Row, Seo, ViewTabs } from '../components/ui';
+import { cancelBooking, myBookings, saveMyProfile, waiversFor } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import { listingPath, money, niceDate } from '../lib/format';
 import { colors } from '../lib/theme';
-import type { Booking, Listing, Profile } from '../lib/types';
+import type { Booking, Listing, Profile, Waiver } from '../lib/types';
 
 export const STATUS: Record<Booking['status'], { label: string; color: string }> = {
   requested: { label: 'Waiting on host', color: colors.water },
@@ -16,9 +17,10 @@ export const STATUS: Record<Booking['status'], { label: string; color: string }>
 };
 
 export default function Account() {
-  const { ready, session, profile, isHost, signOut } = useAuth();
+  const { ready, session, profile, signOut } = useAuth();
   const [rows, setRows] = useState<(Booking & { listing: Listing | null })[] | null>(null);
-  const load = () => myBookings().then(setRows);
+  const [waivers, setWaivers] = useState<Waiver[]>([]);
+  const load = () => myBookings().then((r) => { setRows(r); waiversFor(r.filter((b) => b.listing?.kind === 'trip').map((b) => b.id)).then(setWaivers); });
   useEffect(() => { if (session) load(); }, [session]);
 
   if (!ready) return <Page><P>Loading…</P></Page>;
@@ -27,10 +29,11 @@ export default function Account() {
   return (
     <Page>
       <Seo title="My trips" description="Your bookings." />
+      <ViewTabs current="customer" />
+      <Eyebrow>Customer</Eyebrow>
       <H1>My trips</H1>
       <P muted>{profile?.full_name ? `${profile.full_name} · ` : ''}{session.user.email}</P>
-      {isHost ? <View style={{ marginTop: 10, maxWidth: 260 }}><Button title="Open host dashboard" href="/host" kind="secondary" /></View> : null}
-      {profile ? <ProfileCard profile={profile} /> : null}
+      <Notifications />
       <H2>Bookings</H2>
       {rows === null ? <P>Loading…</P> : rows.length === 0 ? <P>No bookings yet. <Link href="/search"><Text style={{ color: colors.water }}>Find a place or a trip</Text></Link></P> : (
         <View style={{ gap: 12 }}>
@@ -41,6 +44,11 @@ export default function Account() {
               <P>{b.start_date === b.end_date ? niceDate(b.start_date) : `${niceDate(b.start_date)} → ${niceDate(b.end_date)}`}{b.start_time ? ` · ${b.start_time}` : ''} · {b.guests} guests</P>
               {b.total_cents ? <P muted>{`Estimated ${money(b.total_cents)}`}</P> : null}
               {b.host_note ? <Notice>{`From the host: ${b.host_note}`}</Notice> : null}
+              {b.listing?.kind === 'trip' && (b.status === 'requested' || b.status === 'accepted') ? (
+                waivers.some((w) => w.booking_id === b.id && w.signer_id === session.user.id)
+                  ? <Text style={{ color: colors.good, fontWeight: '700' }}>Waiver signed</Text>
+                  : <Row><Button small title="Sign trip waiver" href={`/waiver/${b.id}`} /></Row>
+              ) : null}
               {b.status === 'requested' || b.status === 'accepted' ? (
                 <Row><Button small kind="ghost" title="Cancel" onPress={async () => { await cancelBooking(b.id); load(); }} /></Row>
               ) : null}
@@ -48,6 +56,7 @@ export default function Account() {
           ))}
         </View>
       )}
+      {profile ? <ProfileCard profile={profile} /> : null}
       <View style={{ marginTop: 24, maxWidth: 200 }}><Button title="Sign out" kind="ghost" onPress={signOut} /></View>
     </Page>
   );

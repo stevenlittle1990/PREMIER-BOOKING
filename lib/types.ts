@@ -77,7 +77,56 @@ export type Profile = {
   marketing_sms_at: string | null;
   last_booking_at: string | null;
   created_at: string;
+  team_type: 'guide' | 'house_owner' | 'staff' | null;
+  worker_type: 'employee' | 'subcontractor' | null;
+  bio: string | null;
+  photo_url: string | null;
+  guide_license: string | null;
+  captain_license: string | null;
+  boat: string | null;
+  emergency_contact: string | null;
+  onboarded_at: string | null;
 };
+
+export const TEAM_TYPES = { guide: 'Guide', house_owner: 'House owner', staff: 'Staff' } as const;
+export const WORKER_TYPES = { employee: 'Employee', subcontractor: 'Subcontractor' } as const;
+
+export type Assignment = {
+  id: string;
+  booking_id: string;
+  assignee_id: string;
+  job: string;
+  status: 'pending' | 'accepted' | 'declined';
+  note: string | null;
+  responded_at: string | null;
+  created_at: string;
+};
+
+export type Notification = {
+  id: string;
+  title: string;
+  body: string;
+  link: string | null;
+  booking_id: string | null;
+  read_at: string | null;
+  created_at: string;
+  send_error: string | null;
+};
+
+export type TaxForm = {
+  profile_id: string;
+  legal_name: string;
+  business_name: string | null;
+  tax_class: string;
+  address: string;
+  city_state_zip: string;
+  tin_type: 'ssn' | 'ein';
+  tin_last4: string;
+  signature_name: string;
+  signed_at: string;
+};
+
+export type Waiver = { id: string; booking_id: string; signer_id: string | null; signer_name: string; minors: string | null; signed_at: string };
 
 export type Catalog = { areas: Area[]; bays: BaySystem[]; listings: Listing[]; builtAt: string };
 

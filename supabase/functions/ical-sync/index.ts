@@ -40,17 +40,16 @@ function busyNights(ics: string): Set<string> {
 
 Deno.serve(async (req) => {
   const only = new URL(req.url).searchParams.get('listing');
-  let q = db.from('listing_calendars').select('listing_id, import_urls, listing:listings(slug)').neq('import_urls', '{}');
-  if (only) q = q.eq('listing_id', only);
+  let q = db.from('listings').select('id, slug, ical_import_urls').neq('ical_import_urls', '{}');
+  if (only) q = q.eq('id', only);
   const { data: listings, error } = await q;
   if (error) return Response.json({ error: error.message }, { status: 500 });
 
   const results: Record<string, unknown> = {};
-  for (const c of listings ?? []) {
-    const l = { id: c.listing_id as string, slug: (c.listing as unknown as { slug: string } | null)?.slug ?? c.listing_id, urls: c.import_urls as string[] };
+  for (const l of listings ?? []) {
     try {
       const nights = new Set<string>();
-      for (const url of l.urls) {
+      for (const url of l.ical_import_urls as string[]) {
         const res = await fetch(url, { headers: { 'User-Agent': 'PremierBooking-CalendarSync/1.0' } });
         if (!res.ok) throw new Error(`${new URL(url).host} answered ${res.status}`);
         for (const d of busyNights(await res.text())) nights.add(d);
@@ -64,10 +63,10 @@ Deno.serve(async (req) => {
         const { error: e } = await db.from('blocked_dates').insert(rows);
         if (e) throw new Error(e.message);
       }
-      await db.from('listing_calendars').update({ synced_at: new Date().toISOString(), sync_error: null }).eq('listing_id', l.id);
+      await db.from('listings').update({ ical_synced_at: new Date().toISOString(), ical_sync_error: null }).eq('id', l.id);
       results[l.slug] = { nights: rows.length };
     } catch (e) {
-      await db.from('listing_calendars').update({ sync_error: (e as Error).message }).eq('listing_id', l.id);
+      await db.from('listings').update({ ical_sync_error: (e as Error).message }).eq('id', l.id);
       results[l.slug] = { error: (e as Error).message };
     }
   }

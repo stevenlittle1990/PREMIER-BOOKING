@@ -1,7 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Switch, Text, View } from 'react-native';
-import { CalendarSync } from '../../../components/CalendarSync';
 import { Button, Card, Chip, Field, H1, Notice, P, Page, Row, Seo } from '../../../components/ui';
 import { allAreas, hostListings, hosts, saveListing, slugify } from '../../../lib/api';
 import { useAuth } from '../../../lib/auth';
@@ -170,8 +169,6 @@ export default function EditListing() {
           <Field label={isStay ? 'Amenities (one per line)' : "What's included (one per line)"} multiline value={text.amenities} onChangeText={(t) => setText({ ...text, amenities: t })} />
           <Field label="Photo links (one per line, first is the cover)" multiline autoCapitalize="none" value={text.photos} onChangeText={(t) => setText({ ...text, photos: t })} />
         </Card>
-
-        {!isNew && l.id && l.slug ? <CalendarSync listingId={l.id} slug={l.slug} /> : null}
 
         {isAdmin && team.length ? (
           <Card>

@@ -26,6 +26,10 @@
   to = "/join/[code].html"
   status = 200
 [[redirects]]
+  from = "/waiver/*"
+  to = "/waiver/[id].html"
+  status = 200
+[[redirects]]
   from = "/host/listing/*"
   to = "/host/listing/[id].html"
   status = 200

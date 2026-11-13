@@ -8,7 +8,7 @@ alter table public.blocked_dates add column source text not null default 'host';
 create extension if not exists pg_net with schema extensions;
 create extension if not exists pg_cron;
 
--- Every 30 minutes. Replace <ANON_KEY> with the project's anon (public) key when applying to a new project.
+-- Scheduled every 30 minutes at first; unscheduled 2026-11-13 because Premier Booking replaces Hostfully/Airbnb (re-run to turn back on).
 select cron.schedule('ical-sync', '*/30 * * * *', $$
   select net.http_post(
     url := 'https://yghmjkeqsnfbntbobvfx.supabase.co/functions/v1/ical-sync',
