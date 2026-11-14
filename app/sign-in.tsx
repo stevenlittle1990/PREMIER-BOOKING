@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Button, Card, Eyebrow, Field, H1, Notice, P, Page, Seo } from '../components/ui';
+import { Button, Card, Eyebrow, Field, H1, Notice, OPT_IN_EMAIL, OPT_IN_SMS, OptIn, P, Page, Seo } from '../components/ui';
 import { useAuth } from '../lib/auth';
 import { hasDatabase, supabase } from '../lib/supabase';
 import { colors, radius } from '../lib/theme';
@@ -20,6 +20,8 @@ export default function SignIn() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  const [optSms, setOptSms] = useState(false);
+  const [optEmail, setOptEmail] = useState(false);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -45,7 +47,7 @@ export default function SignIn() {
   const signUp = () => run(async () => {
     if (password.length < 8) throw new Error('Use at least 8 characters for your password.');
     const { data, error } = await supabase!.auth.signUp({ email: email.trim(), password, options: {
-      data: { full_name: name.trim(), phone: phone.trim() || undefined }, emailRedirectTo: back,
+      data: { full_name: name.trim(), phone: phone.trim() || undefined, marketing_sms: optSms && Boolean(phone.trim()), marketing_email: optEmail }, emailRedirectTo: back,
     } });
     if (error) throw error;
     if (data.session) { await refresh(); go(); return; }
@@ -101,8 +103,10 @@ export default function SignIn() {
             </>
           ) : mode === 'signup' ? (
             <>
+              <OptIn label={OPT_IN_SMS} value={optSms} onChange={setOptSms} />
+              <OptIn label={OPT_IN_EMAIL} value={optEmail} onChange={setOptEmail} />
               <Button title="Create account" onPress={signUp} busy={busy} disabled={!okEmail || !password || !name.trim()} />
-              <P muted style={{ fontSize: 13, marginTop: 10 }}>We use your phone and email for booking updates. Deals are optional and off until you turn them on.</P>
+              <P muted style={{ fontSize: 13, marginTop: 10 }}>We'll always text and email you about your own bookings. Specials only if you check the boxes above.</P>
             </>
           ) : !sent ? (
             <Button title="Email me a sign-in link" onPress={sendLink} busy={busy} disabled={!okEmail} />

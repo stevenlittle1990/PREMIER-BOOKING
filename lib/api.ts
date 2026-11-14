@@ -275,6 +275,11 @@ export async function waiverText(): Promise<string> {
   return (data?.value as string) ?? '';
 }
 
+export async function getSetting(key: string): Promise<string> {
+  const { data } = await supabase!.from('app_settings').select('value').eq('key', key).maybeSingle();
+  return (data?.value as string) ?? '';
+}
+
 export async function saveSetting(key: string, value: string) {
   const { error } = await supabase!.from('app_settings').upsert({ key, value, updated_at: new Date().toISOString() });
   if (error) throw new Error(error.message);
@@ -301,8 +306,23 @@ export async function bookingById(id: string): Promise<(Booking & { listing: Lis
 
 // Guest checkout: no account. The database checks the request and files it with no guest login attached.
 export type InquiryItem = Pick<BookingDraft, 'listing_id' | 'start_date' | 'end_date' | 'start_time' | 'guests' | 'notes'>;
-export async function guestInquiry(items: InquiryItem[], contact: { name: string; email: string; phone: string }) {
+export async function guestInquiry(items: InquiryItem[], contact: { name: string; email: string; phone: string; marketingSms?: boolean; marketingEmail?: boolean }) {
   if (!supabase) throw new Error('Booking opens once the database is connected.');
-  const { error } = await supabase.rpc('guest_inquiry', { p_items: items, p_name: contact.name, p_email: contact.email, p_phone: contact.phone });
+  const base = { p_items: items, p_name: contact.name, p_email: contact.email, p_phone: contact.phone };
+  let { error } = await supabase.rpc('guest_inquiry', { ...base, p_marketing_sms: Boolean(contact.marketingSms), p_marketing_email: Boolean(contact.marketingEmail) });
+  // Until the opt-in database update is applied, the older version (no opt-in) still takes the request.
+  if (error && /could not find|PGRST202/i.test(`${error.code} ${error.message}`)) ({ error } = await supabase.rpc('guest_inquiry', base));
   if (error) throw new Error(error.message);
+}
+
+// Specials and check-ins from the admin: who would get it, and sending it.
+export async function announcementAudience(): Promise<{ app: number; text: number; email: number } | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('announcement_audience');
+  return error ? null : (data as { app: number; text: number; email: number } | null);
+}
+export async function sendAnnouncement(m: { title: string; body: string; link: string; text: boolean; email: boolean }) {
+  const { data, error } = await supabase!.rpc('send_announcement', { p_title: m.title, p_body: m.body, p_link: m.link, p_text: m.text, p_email: m.email });
+  if (error) throw new Error(/could not find|PGRST202/i.test(`${error.code} ${error.message}`) ? 'This needs the messages database update first (see the script in your files).' : error.message);
+  return data as number;
 }

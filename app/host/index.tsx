@@ -5,10 +5,10 @@ import { Calendar, type DayMark } from '../../components/Calendar';
 import { MapEmbed } from '../../components/MapEmbed';
 import { Notifications } from '../../components/Notifications';
 import { TeamCalendar } from '../../components/TeamCalendar';
-import { Button, Card, Chip, Eyebrow, Field, H1, H2, Notice, P, Page, Row, Seo, Stat, ViewTabs } from '../../components/ui';
+import { Button, Card, Chip, Eyebrow, Field, H1, H2, Notice, OptIn, P, Page, Row, Seo, Stat, ViewTabs } from '../../components/ui';
 import {
   addTeamMember, allAreas, assign, assignmentsFor, customers, decideBooking, hostBookings, hostCalendar, hostListings, revealTin, saveArea,
-  saveBay, saveSetting, setRole, slugify, team, toggleBlocked, unassign, waiversFor, waiverText, type PendingMember,
+  saveBay, saveSetting, getSetting, announcementAudience, sendAnnouncement, setRole, slugify, team, toggleBlocked, unassign, waiversFor, waiverText, type PendingMember,
 } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import { addDays, iso, money, niceDate, rateLabel } from '../../lib/format';
@@ -396,7 +396,9 @@ function Waivers({ bookings, waivers }: Ctx) {
 function Settings({ bookings, assignments, people }: Ctx) {
   const [text, setText] = useState('');
   const [msg, setMsg] = useState('');
-  useEffect(() => { waiverText().then(setText); }, []);
+  const [tripNote, setTripNote] = useState('');
+  const [noteMsg, setNoteMsg] = useState('');
+  useEffect(() => { waiverText().then(setText); getSetting('trip_confirmation_text').then(setTripNote); }, []);
   const origin = Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : 'https://premier-booking.netlify.app';
   function csv(name: string, rows: (string | number | null | undefined)[][]) {
     if (Platform.OS !== 'web') return;
@@ -428,6 +430,13 @@ function Settings({ bookings, assignments, people }: Ctx) {
         <Field label="Waiver" multiline value={text} onChangeText={setText} style={{ minHeight: 320 }} />
         {msg ? <Notice tone="good">{msg}</Notice> : null}
         <Button title="Save waiver" onPress={async () => { await saveSetting('waiver_text', text); setMsg('Saved.'); }} />
+      </Card>
+      <H2>Trip confirmation note</H2>
+      <Card>
+        <P muted style={{ fontSize: 14, marginBottom: 8 }}>Sent by email with every confirmed guided trip, after "Your booking is confirmed". This is Jason's note to guests.</P>
+        <Field label="Note" multiline value={tripNote} onChangeText={setTripNote} style={{ minHeight: 260 }} />
+        {noteMsg ? <Notice tone={noteMsg === 'Saved.' ? 'good' : 'bad'}>{noteMsg}</Notice> : null}
+        <Button title="Save note" onPress={async () => { try { await saveSetting('trip_confirmation_text', tripNote); setNoteMsg('Saved.'); } catch (e) { setNoteMsg((e as Error).message); } }} />
       </Card>
       <H2>For your accountant</H2>
       <Card style={{ gap: 8 }}>
@@ -490,6 +499,49 @@ function Areas() {
   );
 }
 
+// Specials, reminders and check-ins. Everyone with an account sees it in the app;
+// texts and emails go only to people who said yes to specials.
+function Announce() {
+  const [aud, setAud] = useState<{ app: number; text: number; email: number } | null>(null);
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [link, setLink] = useState('/');
+  const [byText, setByText] = useState(true);
+  const [byEmail, setByEmail] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ tone: 'good' | 'bad'; text: string } | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  useEffect(() => { announcementAudience().then(setAud); }, []);
+  async function send() {
+    setBusy(true); setMsg(null);
+    try {
+      const n = await sendAnnouncement({ title: title.trim(), body: body.trim(), link: link.trim() || '/', text: byText, email: byEmail });
+      setMsg({ tone: 'good', text: `Sent to ${n} customer${n === 1 ? '' : 's'}.` }); setTitle(''); setBody(''); setConfirm(false);
+    } catch (e) { setMsg({ tone: 'bad', text: (e as Error).message }); }
+    setBusy(false);
+  }
+  return (
+    <Card style={{ gap: 4 }}>
+      <Text style={{ fontWeight: '800', fontSize: 18, color: colors.navy }}>Send a message to customers</Text>
+      <P muted style={{ fontSize: 14, marginBottom: 6 }}>{aud
+        ? `Shows in the app for ${aud.app} customer${aud.app === 1 ? '' : 's'}. Texts go to ${aud.text} and emails to ${aud.email} who said yes to specials.`
+        : 'Monthly specials, open dates, or just checking in. Texts and emails go only to people who said yes to specials.'}</P>
+      <Field label="Title" placeholder="December special: lodge + 2 days fishing" value={title} onChangeText={setTitle} />
+      <Field label="Message" multiline placeholder="Book any December weekend and…" value={body} onChangeText={setBody} style={{ minHeight: 120 }} />
+      <Field label="Opens this page when tapped" autoCapitalize="none" value={link} onChangeText={setLink} placeholder="/plan" />
+      <OptIn label="Also send as a text to people who said yes" value={byText} onChange={setByText} />
+      <OptIn label="Also send as an email to people who said yes" value={byEmail} onChange={setByEmail} />
+      {msg ? <Notice tone={msg.tone}>{msg.text}</Notice> : null}
+      {confirm ? (
+        <Row>
+          <Button title="Yes, send it now" onPress={send} busy={busy} />
+          <Button title="Not yet" kind="ghost" onPress={() => setConfirm(false)} />
+        </Row>
+      ) : <Button title="Send" onPress={() => setConfirm(true)} disabled={title.trim().length < 2 || body.trim().length < 2} />}
+    </Card>
+  );
+}
+
 function Customers() {
   const [rows, setRows] = useState<Profile[]>([]);
   const [filter, setFilter] = useState<'all' | 'email' | 'sms'>('all');
@@ -508,6 +560,8 @@ function Customers() {
   }
   return (
     <View style={{ gap: 10 }}>
+      <Announce />
+      <H2>Customer list</H2>
       <P muted>Everyone with an account. Only send deals to people who opted in.</P>
       <Row gap={8}>
         <Chip label={`All (${rows.length})`} active={filter === 'all'} onPress={() => setFilter('all')} />

@@ -160,3 +160,19 @@ export const s = StyleSheet.create({
   card: { backgroundColor: colors.card, borderRadius: radius, borderWidth: 1, borderColor: colors.line, padding: 16 },
   notice: { backgroundColor: '#fff', borderLeftWidth: 4, padding: 12, borderRadius: radius, marginVertical: 8 },
 });
+
+// Opt-in checkbox for specials and deals. Always starts unchecked: the customer has to say yes.
+export function OptIn({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <Pressable onPress={() => onChange(!value)} accessibilityRole="checkbox" accessibilityState={{ checked: value }}
+      style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginBottom: 10, minHeight: 32 }}>
+      <View style={{ width: 22, height: 22, borderRadius: 5, borderWidth: 2, borderColor: colors.navy, backgroundColor: value ? colors.navy : '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 1 }}>
+        {value ? <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>✓</Text> : null}
+      </View>
+      <Text style={{ flex: 1, fontSize: 14, lineHeight: 20, color: colors.text }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+export const OPT_IN_SMS = 'Text me specials, deals and open dates. Msg & data rates may apply. Reply STOP to opt out anytime.';
+export const OPT_IN_EMAIL = 'Email me specials, deals and fishing reports. Unsubscribe anytime.';
