@@ -246,7 +246,7 @@ function PlanCard({ plan, a, onPick }: { plan: Plan; a: Answers; onPick: () => v
   const cover = plan.items.find((i) => i.listing.photos.length)?.listing ?? plan.stay ?? plan.items[0]?.listing;
   return (
     <Card style={{ padding: 0, overflow: 'hidden', marginTop: 14 }}>
-      {cover ? <Photo listing={cover} height={150} /> : null}
+      {cover ? <Photo listing={cover} /> : null}
       <View style={{ padding: 16, gap: 10 }}>
         <Text role="heading" style={{ fontSize: 22, color: colors.navy }}>{plan.name}</Text>
         <P muted style={{ marginTop: -6 }}>{plan.blurb}</P>

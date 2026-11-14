@@ -136,7 +136,8 @@
       "bay_system_id": "68888cac-e4fe-5c13-838c-d054dda63f9e",
       "owner_id": null,
       "photos": [
-        "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/angler-holding-redfish-action.jpg",
+        "https://premier-booking.netlify.app/photos/inshore-redfish.jpg",
+        "https://premier-booking.netlify.app/photos/flats-redfish.jpg",
         "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/boat-in-clear-water-wide.jpg",
         "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/family-group-fishing-catch.jpg",
         "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/woman-holding-trout.jpg",
@@ -200,7 +201,8 @@
       "bay_system_id": "5ac4032b-32c6-557d-b528-d4db16ac7ac1",
       "owner_id": null,
       "photos": [
-        "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/wade-fishing-redfish-guest.jpg",
+        "https://premier-booking.netlify.app/photos/wade-redfish.jpg",
+        "https://premier-booking.netlify.app/photos/flats-redfish.jpg",
         "https://www.pocpremierlodge.com/Images/Optimized/Real%20Photos/guest-trout-portrait.jpg"
       ],
       "price_cents": 0,
@@ -413,7 +415,9 @@
       "area_id": "5a74fd9d-63a4-512f-853f-52d5ca8309da",
       "bay_system_id": "5ac4032b-32c6-557d-b528-d4db16ac7ac1",
       "owner_id": null,
-      "photos": [],
+      "photos": [
+        "https://premier-booking.netlify.app/photos/island-boat.jpg"
+      ],
       "price_cents": 0,
       "price_unit": "trip",
       "max_guests": 6,

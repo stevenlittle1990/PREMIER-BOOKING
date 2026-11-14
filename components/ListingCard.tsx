@@ -10,11 +10,13 @@ const TINTS: Record<string, string> = {
   island_tour: '#2f6f6a', bird_watching: '#4f6f8f', hunting: '#3d5566', other: '#40576b',
 };
 
-export function Photo({ listing, height = 190 }: { listing: Listing; height?: number }) {
+// Cards use a 5:4 photo, close to how the guides shoot, so a guide's face and the whole fish stay in frame.
+export function Photo({ listing, height }: { listing: Listing; height?: number }) {
   const src = listing.photos[0];
-  if (src) return <Image source={{ uri: src }} style={{ width: '100%', height, backgroundColor: colors.busy }} resizeMode="cover" accessibilityLabel={listing.title} />;
+  const size = height ? { height } : { aspectRatio: 1.25 };
+  if (src) return <Image source={{ uri: src }} style={{ width: '100%', ...size, backgroundColor: colors.busy }} resizeMode="cover" accessibilityLabel={listing.title} />;
   return (
-    <View style={{ height, backgroundColor: TINTS[listing.category] ?? colors.navy2, justifyContent: 'flex-end', padding: 14 }}>
+    <View style={{ ...size, backgroundColor: TINTS[listing.category] ?? colors.navy2, justifyContent: 'flex-end', padding: 14 }}>
       <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase' }}>
         {CATEGORY_LABELS[listing.category]}
       </Text>
