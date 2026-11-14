@@ -1,6 +1,6 @@
-import { Stack } from 'expo-router';
+import { Slot, Stack } from 'expo-router';
 import { Platform } from 'react-native';
-import { AuthProvider } from '../lib/auth';
+import { AuthProvider, PasswordGate } from '../lib/auth';
 import { colors, fonts, FONT_CSS } from '../lib/theme';
 
 // Site-wide fonts (web). Headings use the serif, everything else the sans, like pocpremierlodge.com.
@@ -40,7 +40,9 @@ export default function RootLayout() {
           <style href="premier-global" precedence="default">{GLOBAL_CSS}</style>
         </>
       ) : null}
-      <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
+      {/* Web shows one screen at a time (no stacked cards): stacked pages are what froze and blacked out the phone app. */}
+      {Platform.OS === 'web' ? <Slot /> : <Stack screenOptions={{ headerShown: false, animation: 'none' }} />}
+      <PasswordGate />
     </AuthProvider>
   );
 }

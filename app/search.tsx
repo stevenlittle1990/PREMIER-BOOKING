@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { DateField } from '../components/DateField';
 import { ListingGrid } from '../components/ListingCard';
 import { Chip, Field, H1, P, Page, Row, Seo } from '../components/ui';
@@ -57,35 +57,31 @@ export default function Search() {
       <H1>{heading}{area ? ` in ${area.name}` : ''}</H1>
 
       <View style={{ gap: 10, marginBottom: 16 }}>
-        <Row gap={8}>
-          <Text style={label}>Area</Text>
+        <ChipRow label="Area">
           <Chip label="Any" active={!q.area} onPress={() => set('area')} />
           {data.areas.map((a) => <Chip key={a.id} label={a.name} active={q.area === a.slug} onPress={() => set('area', a.slug)} />)}
-        </Row>
-        <Row gap={8}>
-          <Text style={label}>Bay</Text>
+        </ChipRow>
+        <ChipRow label="Bay">
           <Chip label="Any" active={!q.bay} onPress={() => set('bay')} />
           {bays.map((b) => <Chip key={b.id} label={b.name} active={q.bay === b.slug} onPress={() => set('bay', b.slug)} />)}
-        </Row>
-        <Row gap={8}>
-          <Text style={label}>Type</Text>
+        </ChipRow>
+        <ChipRow label="Type">
           <Chip label="All" active={!q.kind} onPress={() => set('kind')} />
           <Chip label="Stays" active={q.kind === 'stay'} onPress={() => set('kind', 'stay')} />
           <Chip label="Trips" active={q.kind === 'trip'} onPress={() => set('kind', 'trip')} />
-        </Row>
+        </ChipRow>
         {q.kind === 'trip' ? (
-          <Row gap={8}>
-            <Text style={label}>Trip</Text>
+          <ChipRow label="Trip">
             <Chip label="Any" active={!q.category} onPress={() => set('category')} />
             {TRIP_CATEGORIES.filter((c) => data.listings.some((l) => l.category === c)).map((c) =>
               <Chip key={c} label={CATEGORY_LABELS[c]} active={q.category === c} onPress={() => set('category', c)} />)}
-          </Row>
+          </ChipRow>
         ) : null}
-        <Row gap={10}>
-          <View style={{ width: 200 }}>
+        <Row gap={10} style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}>
+          <View style={{ flex: 3, minWidth: 0 }}>
             <DateField label="Date" value={q.date ?? ''} onChange={(d) => set('date', d || undefined)} />
           </View>
-          <View style={{ width: 120 }}>
+          <View style={{ flex: 2, minWidth: 0 }}>
             <Field label="Guests" placeholder="Any" keyboardType="number-pad" key={`g${mounted}`} defaultValue={q.guests ?? ''}
               onBlur={(e: any) => set('guests', e?.target?.value || undefined)} />
           </View>
@@ -98,4 +94,15 @@ export default function Search() {
   );
 }
 
-const label = { width: 54, fontWeight: '700' as const, color: colors.muted, fontSize: 13, textTransform: 'uppercase' as const };
+const label = { fontWeight: '700' as const, color: colors.muted, fontSize: 13, textTransform: 'uppercase' as const, letterSpacing: 0.5, marginBottom: 6 };
+
+// One line of choices per filter that slides sideways on a phone, instead of a wall of wrapped boxes.
+function ChipRow({ label: text, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View>
+      <Text style={label}>{text}</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -16 }}
+        contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}>{children}</ScrollView>
+    </View>
+  );
+}

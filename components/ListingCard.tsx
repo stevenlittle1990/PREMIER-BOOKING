@@ -29,7 +29,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
     : `${listing.duration_hours ? `${listing.duration_hours} hours · ` : ''}Up to ${listing.max_guests} people`;
   return (
     <Link href={listingPath(listing) as never} asChild>
-      <Pressable style={({ pressed }) => ({ flexBasis: 320, flexGrow: 1, maxWidth: 520, opacity: pressed ? 0.9 : 1 })}>
+      {/* A plain style object: Link can't pass a function style through, which left the card 800px wide on phones. */}
+      <Pressable style={{ flexBasis: 300, flexGrow: 1, flexShrink: 1, minWidth: 0, maxWidth: 520 }}>
         <View style={{ backgroundColor: '#fff', borderRadius: radius, overflow: 'hidden', borderWidth: 1, borderColor: colors.line }}>
           <Photo listing={listing} />
           <View style={{ padding: 14, gap: 4 }}>

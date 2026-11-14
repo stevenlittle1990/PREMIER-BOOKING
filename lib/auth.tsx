@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
+import { router, usePathname } from 'expo-router';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from './supabase';
 import type { Profile } from './types';
@@ -36,8 +37,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await loadProfile(data.session);
       setReady(true);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((e, s) => {
       setSession(s);
+      // "Forgot password" link: go make a new one, even if the email link landed on the home page.
+      if (e === 'PASSWORD_RECOVERY') setTimeout(() => router.replace('/sign-in?step=password' as never), 0);
       loadProfile(s);
     });
     return () => sub.subscription.unsubscribe();
@@ -59,3 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export const useAuth = () => useContext(Ctx);
+
+// New accounts confirm their email first, then make a password. Until they do, every screen sends them to that step.
+export function PasswordGate() {
+  const { session } = useAuth();
+  const path = usePathname();
+  const needs = Boolean(session?.user.user_metadata?.set_password);
+  useEffect(() => {
+    if (needs && !path.startsWith('/sign-in')) router.replace('/sign-in?step=password' as never);
+  }, [needs, path]);
+  return null;
+}

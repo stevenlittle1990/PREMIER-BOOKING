@@ -24,7 +24,17 @@ export default function Account() {
   useEffect(() => { if (session) load(); }, [session]);
 
   if (!ready) return <Page><P>Loading…</P></Page>;
-  if (!session) return <Page><H1>My trips</H1><P>Sign in to see your bookings.</P><View style={{ marginTop: 12, maxWidth: 200 }}><Button title="Sign in" href="/sign-in" /></View></Page>;
+  if (!session) return (
+    <Page>
+      <Seo title="My trips" description="Your bookings." />
+      <H1>My trips</H1>
+      <P muted>Sign in to see your bookings, waivers and messages.</P>
+      <View style={{ marginTop: 14, gap: 10, maxWidth: 360 }}>
+        <Button title="Sign in" href="/sign-in?next=/account" />
+        <Button title="Create account" kind="secondary" href="/sign-in?mode=signup&next=/account" />
+      </View>
+    </Page>
+  );
 
   return (
     <Page>
