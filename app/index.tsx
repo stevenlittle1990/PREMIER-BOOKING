@@ -32,14 +32,17 @@ export default function Home() {
         jsonLd={{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Premier Booking',
           url: process.env.EXPO_PUBLIC_SITE_URL || 'https://premier-booking.netlify.app' }}
       />
-      <View {...webData('shore')} style={{ backgroundColor: colors.shallows, zIndex: 2 }}>
-        <Container style={{ paddingTop: 22, paddingBottom: 40, maxWidth: 720 }}>
-          <Text style={{ fontSize: 15, color: colors.bay, marginBottom: 2, fontWeight: '600' }}>{first ? `Hi ${first}` : 'Welcome to the coast'}</Text>
-          <Text role="heading" aria-level={1} style={{ fontSize: 34, color: colors.navy, marginBottom: 14 }}>Where to?</Text>
-          <WhereSearch />
+      {/* Animated bay scene (boat, angler, jumping redfish, beach): public/brand/shore-scene.svg, set in the global CSS. */}
+      <View {...webData('scene')} style={{ backgroundColor: colors.shallows, height: 260 }} accessibilityLabel="A guide boat on the bay with an angler catching a redfish, and the beach">
+        <Container style={{ paddingTop: 20, maxWidth: 720 }}>
+          <Text style={{ fontSize: 15, color: colors.navy, marginBottom: 2, fontWeight: '700', opacity: 0.8 }}>{first ? `Hi ${first}` : 'Welcome to the coast'}</Text>
+          <Text role="heading" aria-level={1} style={{ fontSize: 36, color: colors.navy }}>Where to?</Text>
         </Container>
       </View>
-      <Container style={{ paddingTop: 8, paddingBottom: 28, maxWidth: 720 }}>
+      <Container style={{ marginTop: -30, maxWidth: 720, zIndex: 3 }}>
+        <WhereSearch />
+      </Container>
+      <Container style={{ paddingTop: 0, paddingBottom: 28, maxWidth: 720 }}>
         <Link href="/plan" asChild>
           <Pressable accessibilityRole="link" style={{ marginTop: 22, borderRadius: radius + 6, overflow: 'hidden', backgroundColor: colors.navy }}>
             <ImageBackground source={{ uri: PHOTOS.water }} resizeMode="cover" style={{ backgroundColor: colors.navy2 }}>
