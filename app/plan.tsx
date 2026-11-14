@@ -40,7 +40,8 @@ export default function PlanTrip() {
   const next = (s: string) => steps[steps.indexOf(s) + 1] ?? 'ideas';
   const at = steps.indexOf(step) + 1;
   const set = (p: Partial<Q>) => router.setParams(p as never);
-  const go = (p: Partial<Q>) => router.push({ pathname: '/plan', params: { ...q, ...p } } as never);
+  // Replace, not push: each answer used to stack another full page on the phone.
+  const go = (p: Partial<Q>) => router.replace({ pathname: '/plan', params: { ...q, ...p } } as never);
 
   const plans = useMemo(() => (step === 'ideas' || step === 'trip' ? makePlans(data.listings, a) : []), [step, data.listings, q.area, q.who, q.g, q.like, q.n, q.stay]);
   const chosen: Plan | null = useMemo(() => {

@@ -18,6 +18,7 @@ body { background: ${colors.bg}; }
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 26' preserveAspectRatio='none'%3E%3Cpath d='M0 14 C 40 2 80 2 120 14 S 200 26 240 14 V26 H0Z' fill='%23f7f0e3'/%3E%3Cpath d='M0 14 C 40 2 80 2 120 14 S 200 26 240 14' fill='none' stroke='%23ffffff' stroke-width='2' opacity='.8'/%3E%3C/svg%3E") repeat-x;
   background-size: 240px 26px; }
 [data-searchpill][class] { box-shadow: 0 6px 22px rgba(12, 58, 82, 0.14); }
+[data-tabbar][class] { padding-bottom: max(6px, env(safe-area-inset-bottom)) !important; }
 @media (max-width: 760px) { [data-desknav] { display: none !important; } }
 @media (min-width: 761px) { [data-tabbar], [data-phonecall] { display: none !important; } }
 `;
@@ -38,7 +39,7 @@ export default function RootLayout() {
           <style href="premier-global" precedence="default">{GLOBAL_CSS}</style>
         </>
       ) : null}
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
     </AuthProvider>
   );
 }

@@ -5,11 +5,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../lib/auth';
 import { colors, maxWidth } from '../lib/theme';
 import { Logo } from './Logo';
+import { go } from './TabBar';
 
 function NavLink({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href as never} asChild>
-      <Pressable><Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>{label}</Text></Pressable>
+      <Pressable onPress={(e) => { e.preventDefault(); go(href); }}><Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>{label}</Text></Pressable>
     </Link>
   );
 }
