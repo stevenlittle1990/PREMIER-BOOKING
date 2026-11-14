@@ -32,11 +32,15 @@ export default function Home() {
         jsonLd={{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Premier Booking',
           url: process.env.EXPO_PUBLIC_SITE_URL || 'https://premier-booking.netlify.app' }}
       />
-      {/* Animated bay scene (boat, angler, jumping redfish, beach): public/brand/shore-scene.svg, set in the global CSS. */}
-      <View {...webData('scene')} style={{ backgroundColor: colors.shallows, height: 260 }} accessibilityLabel="A guide boat on the bay with an angler catching a redfish, and the beach">
-        <Container style={{ paddingTop: 20, maxWidth: 720 }}>
-          <Text style={{ fontSize: 15, color: colors.navy, marginBottom: 2, fontWeight: '700', opacity: 0.8 }}>{first ? `Hi ${first}` : 'Welcome to the coast'}</Text>
-          <Text role="heading" aria-level={1} style={{ fontSize: 36, color: colors.navy }}>Where to?</Text>
+      {/* The lodge's own photos crossfading behind "Where to?" (slides and timing in the global CSS). */}
+      <View {...webData('hero')} style={{ backgroundColor: colors.navy, height: 330 }}
+        accessibilityLabel="Photos of the bay, the lodge and a redfish catch in Port O'Connor">
+        {[1, 2, 3, 4].map((n) => <View key={n} {...webData('slide')} {...{ dataSet: { slide: '1', [`slide${n}`]: '1' } }} />)}
+        <View {...webData('heroshade')} />
+        <Container style={{ paddingTop: 26, maxWidth: 720 }}>
+          <Text {...webData('herotext')} style={{ fontSize: 13, color: '#fff', marginBottom: 4, fontWeight: '800', letterSpacing: 2, textTransform: 'uppercase' }}>
+            {first ? `Hi ${first}` : "Port O'Connor, Texas"}</Text>
+          <Text {...webData('herotext')} role="heading" aria-level={1} style={{ fontSize: 44, lineHeight: 50, color: '#fff' }}>Where to?</Text>
         </Container>
       </View>
       <Container style={{ marginTop: -30, maxWidth: 720, zIndex: 3 }}>
