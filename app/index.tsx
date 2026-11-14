@@ -2,6 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Link } from 'expo-router';
 import { ImageBackground, Pressable, Text, View } from 'react-native';
 import { Container, H2, Page, Seo } from '../components/ui';
+import { WhereSearch } from '../components/WhereSearch';
+import { webData } from '../lib/web';
 import { useAuth } from '../lib/auth';
 import { catalog } from '../lib/catalog';
 import { colors, PHOTOS, radius } from '../lib/theme';
@@ -30,26 +32,14 @@ export default function Home() {
         jsonLd={{ '@context': 'https://schema.org', '@type': 'WebSite', name: 'Premier Booking',
           url: process.env.EXPO_PUBLIC_SITE_URL || 'https://premier-booking.netlify.app' }}
       />
-      <Container style={{ paddingTop: 20, paddingBottom: 28, maxWidth: 720 }}>
-        <Text style={{ fontSize: 15, color: colors.muted, marginBottom: 2 }}>{first ? `Hi ${first}` : 'Welcome'}</Text>
-        <Text role="heading" aria-level={1} style={{ fontSize: 32, color: colors.navy, marginBottom: 14 }}>Where to?</Text>
-
-        <View style={{ gap: 10 }}>
-          {catalog.areas.map((a) => (
-            <Link key={a.id} href={`/areas/${a.slug}` as never} asChild>
-              <Pressable accessibilityRole="link" style={tile}>
-                <Ionicons name="location-outline" size={24} color={colors.water} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 18, fontWeight: '700', color: colors.navy }}>{a.name}</Text>
-                  <Text style={{ fontSize: 14, color: colors.muted }}>{a.region}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={colors.muted} />
-              </Pressable>
-            </Link>
-          ))}
-          <Text style={{ fontSize: 13, color: colors.muted, marginLeft: 4 }}>More coast towns coming soon.</Text>
-        </View>
-
+      <View {...webData('shore')} style={{ backgroundColor: colors.shallows, zIndex: 2 }}>
+        <Container style={{ paddingTop: 22, paddingBottom: 40, maxWidth: 720 }}>
+          <Text style={{ fontSize: 15, color: colors.bay, marginBottom: 2, fontWeight: '600' }}>{first ? `Hi ${first}` : 'Welcome to the coast'}</Text>
+          <Text role="heading" aria-level={1} style={{ fontSize: 34, color: colors.navy, marginBottom: 14 }}>Where to?</Text>
+          <WhereSearch />
+        </Container>
+      </View>
+      <Container style={{ paddingTop: 8, paddingBottom: 28, maxWidth: 720 }}>
         <Link href="/plan" asChild>
           <Pressable accessibilityRole="link" style={{ marginTop: 22, borderRadius: radius + 6, overflow: 'hidden', backgroundColor: colors.navy }}>
             <ImageBackground source={{ uri: PHOTOS.water }} resizeMode="cover" style={{ backgroundColor: colors.navy2 }}>

@@ -21,9 +21,9 @@ export default function EditListing() {
   const [l, setL] = useState<Partial<Listing>>({
     kind: kindParam === 'trip' ? 'trip' : 'stay', category: kindParam === 'trip' ? 'fishing' : 'house',
     price_unit: kindParam === 'trip' ? 'trip' : 'night', max_guests: kindParam === 'trip' ? 4 : 6, min_nights: 1, published: false,
-    photos: [], amenities: [], species: [], start_times: [], highlights: [], rooms: [], house_rules: [], cleaning_fee_cents: 0, cancellation_policy: '',
+    photos: [], amenities: [], species: [], what_to_bring: [], start_times: [], highlights: [], rooms: [], house_rules: [], cleaning_fee_cents: 0, cancellation_policy: '',
   });
-  const [text, setText] = useState({ price: '', photos: '', amenities: '', species: '', times: '', rooms: '', highlights: '', rules: '', cleaning: '', deposit: '', petFee: '' });
+  const [text, setText] = useState({ price: '', photos: '', amenities: '', bring: '', species: '', times: '', rooms: '', highlights: '', rules: '', cleaning: '', deposit: '', petFee: '' });
   const [loaded, setLoaded] = useState(isNew);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -37,7 +37,7 @@ export default function EditListing() {
       if (found) {
         setL(found);
         setText({ price: found.price_cents ? String(found.price_cents / 100) : '', photos: found.photos.join('\n'),
-          amenities: found.amenities.join('\n'), species: found.species.join(', '), times: found.start_times.join(', '),
+          amenities: found.amenities.join('\n'), bring: (found.what_to_bring ?? []).join('\n'), species: found.species.join(', '), times: found.start_times.join(', '),
           rooms: (found.rooms ?? []).map((r) => `${r.name}: ${r.beds}`).join('\n'), highlights: (found.highlights ?? []).join('\n'),
           rules: (found.house_rules ?? []).join('\n'), cleaning: found.cleaning_fee_cents ? String(found.cleaning_fee_cents / 100) : '',
           deposit: found.security_deposit_cents ? String(found.security_deposit_cents / 100) : '', petFee: found.pet_fee_cents ? String(found.pet_fee_cents / 100) : '' });
@@ -66,6 +66,7 @@ export default function EditListing() {
         slug: l.slug || slugify(l.title!),
         price_cents: Math.round((Number(text.price) || 0) * 100),
         photos: lines(text.photos), amenities: text.amenities.split('\n').map((x) => x.trim()).filter(Boolean),
+        what_to_bring: text.bring.split('\n').map((x) => x.trim()).filter(Boolean),
         species: lines(text.species), start_times: lines(text.times),
         highlights: perLine(text.highlights), house_rules: perLine(text.rules),
         rooms: perLine(text.rooms).map((r) => { const [n, ...b] = r.split(':'); return { name: n.trim(), beds: b.join(':').trim() }; }),
@@ -139,7 +140,8 @@ export default function EditListing() {
             <>
               <Field label="Start times (comma between)" placeholder="6:30 AM, 1:00 PM" value={text.times} onChangeText={(t) => setText({ ...text, times: t })} />
               <Field label="Species (comma between)" placeholder="Redfish, Speckled trout" value={text.species} onChangeText={(t) => setText({ ...text, species: t })} />
-              <Field label="Meeting point" value={l.meeting_point ?? ''} onChangeText={(t) => set({ meeting_point: t })} />
+              <Field label="Meeting point (only your crew sees this; guests are told to check with their guide)" value={l.meeting_point ?? ''} onChangeText={(t) => set({ meeting_point: t })} />
+              <Field label="What to bring (one per line)" multiline value={text.bring} onChangeText={(t) => setText({ ...text, bring: t })} />
             </>
           ) : (
             <Field label="Address" value={l.address ?? ''} onChangeText={(t) => set({ address: t })} />

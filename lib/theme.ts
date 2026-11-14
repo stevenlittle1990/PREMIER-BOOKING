@@ -1,29 +1,31 @@
-// Brand colors and fonts live here only. Matches pocpremierlodge.com (navy, paper, Libre Caslon + Hanken Grotesk)
-// with coastal blue in place of the site's orange. Swap this file when the brand package is final.
+// Brand colors and fonts live here only. Beach look (trial, 2026-11-14): deep water, sea glass and dry sand,
+// wordmark styled after the POC Premier Lodge logo. Swap this file when the brand package is final.
 export const colors = {
-  navy: '#10222f',
-  navy2: '#182c39',
-  water: '#1b7896',
-  bay: '#3d5c63',
-  accent: '#5ccfd0', // seafoam, for use on navy
-  sand: '#ede6da',
-  bg: '#f7f4ee', // paper
+  navy: '#0c3a52', // deep water: header, buttons, headings
+  navy2: '#12506b',
+  water: '#1880a0',
+  bay: '#3b6f78',
+  accent: '#6fd6d6', // shallows aqua, for use on dark water
+  sand: '#f1e5cf',
+  bg: '#f7f0e3', // dry sand
   card: '#ffffff',
-  text: '#1a2630',
-  muted: '#7b7468',
-  line: '#d8d0c2',
+  text: '#173141',
+  muted: '#7a7365',
+  line: '#e3d6bd',
   good: '#2e8455',
   bad: '#ac4431',
-  busy: '#e6ddcf',
+  busy: '#ece2cf',
   pending: '#d5ebf0',
   blocked: '#f0d9d4',
+  shallows: '#d9f1ef', // light sea glass, top of the beach gradient
 };
 export const fonts = {
-  display: '"Libre Caslon Text", Georgia, "Times New Roman", serif',
+  display: '"DM Serif Display", Georgia, "Times New Roman", serif',
   body: '"Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
+  logo: '"Oswald", "Arial Narrow", "Helvetica Neue", sans-serif', // tall bold caps, like the POC Premier Lodge logo
 };
-export const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Libre+Caslon+Text:wght@400;700&display=swap';
-export const radius = 6;
+export const FONT_CSS = 'https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Hanken+Grotesk:wght@400;500;600;700;800&family=Oswald:wght@500;700&display=swap';
+export const radius = 10;
 export const maxWidth = 1120;
 
 // Photos from pocpremierlodge.com used as backgrounds.

@@ -4,6 +4,7 @@ import { Linking, Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../lib/auth';
 import { colors, maxWidth } from '../lib/theme';
+import { Logo } from './Logo';
 
 function NavLink({ href, label }: { href: string; label: string }) {
   return (
@@ -19,14 +20,12 @@ export function Header() {
   const insets = useSafeAreaInsets();
   const native = Platform.OS !== 'web';
   return (
-    <View style={{ backgroundColor: colors.navy, paddingTop: native ? insets.top : 0 }}>
-      <View style={{ width: '100%', maxWidth, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 14,
+    <View {...webData('oceanbar')} style={{ backgroundColor: colors.navy, paddingTop: native ? insets.top : 0 }}>
+      <View style={{ width: '100%', maxWidth, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 12,
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <Link href="/" asChild>
           <Pressable>
-            <Text {...webData('display')} role="heading" aria-level={2} style={{ color: '#fff', fontSize: 24, letterSpacing: 0.2 }}>
-              Premier<Text style={{ color: colors.accent }}> Booking</Text>
-            </Text>
+            <View><Logo /></View>
           </Pressable>
         </Link>
         {native ? null : <View {...webData('desknav')} style={{ flexDirection: 'row', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -46,9 +45,9 @@ export function Header() {
 
 export function Footer() {
   return (
-    <View style={{ backgroundColor: colors.navy, marginTop: 'auto' }}>
+    <View {...webData('oceanfoot')} style={{ backgroundColor: colors.navy, marginTop: 'auto' }}>
       <View style={{ width: '100%', maxWidth, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 28, gap: 6 }}>
-        <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Premier Booking</Text>
+        <View style={{ marginBottom: 6 }}><Logo size={0.9} /></View>
         <Text style={{ color: '#b8c7d4' }}>Houses, fishing guides and trips on the Texas coast.</Text>
         <Text style={{ color: '#b8c7d4' }}>Home of POC Premier Lodge · 110 East Monroe Ave., Port O'Connor, TX · 361-210-8494</Text>
         <View style={{ flexDirection: 'row', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>

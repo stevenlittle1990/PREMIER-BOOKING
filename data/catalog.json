@@ -127,7 +127,8 @@
       "tax_pct": 6,
       "security_deposit_cents": 50000,
       "pets_allowed": true,
-      "pet_fee_cents": 15000
+      "pet_fee_cents": 15000,
+      "what_to_bring": []
     },
     {
       "id": "97ab6694-3ab4-501e-b050-a47ea2499cd1",
@@ -154,8 +155,9 @@
         "1:00 PM"
       ],
       "amenities": [
-        "Rods and tackle",
-        "Ice",
+        "All fishing gear, supplied by your guide",
+        "All the ice, with an ice chest on board",
+        "Your fish cleaned and bagged at the end of the trip",
         "Kid friendly"
       ],
       "species": [
@@ -183,7 +185,14 @@
       "tax_pct": 0,
       "security_deposit_cents": 0,
       "pets_allowed": false,
-      "pet_fee_cents": 0
+      "pet_fee_cents": 0,
+      "what_to_bring": [
+        "Any food and drinks you like. Adult beverages are fine, but no glass bottles please",
+        "No bananas on the boat",
+        "A small over-the-shoulder carry-on is OK. Please don't bring your own ice chest: large chests aren't allowed on the boat",
+        "Shoes without black soles",
+        "Sunscreen, sunglasses and a hat"
+      ]
     },
     {
       "id": "ec865ed6-7611-5b99-8ec5-ac615fbe67d5",
@@ -201,13 +210,14 @@
       "bathrooms": null,
       "beds": null,
       "min_nights": 1,
-      "duration_hours": 6,
+      "duration_hours": 5,
       "start_times": [
         "6:00 AM"
       ],
       "amenities": [
-        "Rods and tackle",
-        "Wading gear tips"
+        "All fishing gear, supplied by your guide",
+        "All the ice, with an ice chest on board",
+        "Your fish cleaned and bagged at the end of the trip"
       ],
       "species": [
         "Redfish",
@@ -232,7 +242,15 @@
       "tax_pct": 0,
       "security_deposit_cents": 0,
       "pets_allowed": false,
-      "pet_fee_cents": 0
+      "pet_fee_cents": 0,
+      "what_to_bring": [
+        "Any food and drinks you like. Adult beverages are fine, but no glass bottles please",
+        "No bananas on the boat",
+        "A small over-the-shoulder carry-on is OK. Please don't bring your own ice chest: large chests aren't allowed on the boat",
+        "Shoes without black soles",
+        "Sunscreen, sunglasses and a hat",
+        "Wading boots or old sneakers that stay on in the mud"
+      ]
     },
     {
       "id": "9e0fb589-c79e-5c6e-94db-2fb5011f458e",
@@ -254,7 +272,11 @@
       "start_times": [
         "6:30 AM"
       ],
-      "amenities": [],
+      "amenities": [
+        "All fishing gear, supplied by your guide",
+        "All the ice, with an ice chest on board",
+        "Your fish cleaned and bagged at the end of the trip"
+      ],
       "species": [
         "Bull redfish",
         "Black drum",
@@ -279,7 +301,14 @@
       "tax_pct": 0,
       "security_deposit_cents": 0,
       "pets_allowed": false,
-      "pet_fee_cents": 0
+      "pet_fee_cents": 0,
+      "what_to_bring": [
+        "Any food and drinks you like. Adult beverages are fine, but no glass bottles please",
+        "No bananas on the boat",
+        "A small over-the-shoulder carry-on is OK. Please don't bring your own ice chest: large chests aren't allowed on the boat",
+        "Shoes without black soles",
+        "Sunscreen, sunglasses and a hat"
+      ]
     },
     {
       "id": "2f5942a6-3fd8-5f9f-a58d-a508e2e88fe9",
@@ -321,7 +350,13 @@
       "tax_pct": 0,
       "security_deposit_cents": 0,
       "pets_allowed": false,
-      "pet_fee_cents": 0
+      "pet_fee_cents": 0,
+      "what_to_bring": [
+        "Hat, sunglasses and sunscreen",
+        "Light jacket for the ride back",
+        "Drinks and snacks (no glass)",
+        "Phone or camera for the sunset"
+      ]
     },
     {
       "id": "d82ca488-d4df-5296-943c-5e3f0700c653",
@@ -363,7 +398,15 @@
       "tax_pct": 0,
       "security_deposit_cents": 0,
       "pets_allowed": false,
-      "pet_fee_cents": 0
+      "pet_fee_cents": 0,
+      "what_to_bring": [
+        "Swimsuit and towel",
+        "Hat, sunglasses and reef-safe sunscreen",
+        "Water and snacks for the day (no glass)",
+        "Sandals or water shoes",
+        "Beach chairs or an umbrella if you want them",
+        "Bag to carry out your trash (the island has no services)"
+      ]
     },
     {
       "id": "21bfdeb8-6b1f-535a-a569-54d92b373c53",
@@ -404,7 +447,15 @@
       "tax_pct": 0,
       "security_deposit_cents": 0,
       "pets_allowed": false,
-      "pet_fee_cents": 0
+      "pet_fee_cents": 0,
+      "what_to_bring": [
+        "Swimsuit and towel",
+        "Hat, sunglasses and reef-safe sunscreen",
+        "Water and snacks for the day (no glass)",
+        "Sandals or water shoes",
+        "Beach chairs or an umbrella if you want them",
+        "Bag to carry out your trash (the island has no services)"
+      ]
     },
     {
       "id": "a324c16b-b7a7-56a0-b8d0-38170ca1548d",
@@ -444,7 +495,15 @@
       "tax_pct": 0,
       "security_deposit_cents": 0,
       "pets_allowed": false,
-      "pet_fee_cents": 0
+      "pet_fee_cents": 0,
+      "what_to_bring": [
+        "Binoculars",
+        "Hat, sunglasses and sunscreen",
+        "Bug spray",
+        "Water and a snack",
+        "Camera with a zoom lens if you have one",
+        "Closed-toe shoes"
+      ]
     }
   ],
   "builtAt": "seed"

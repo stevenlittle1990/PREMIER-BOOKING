@@ -28,6 +28,7 @@ export type Listing = {
   start_times: string[];
   amenities: string[];
   species: string[];
+  what_to_bring: string[];
   address: string | null;
   meeting_point: string | null;
   published: boolean;

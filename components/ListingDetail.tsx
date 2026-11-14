@@ -94,7 +94,19 @@ export function ListingDetail({ slug }: { slug: string }) {
             </>
           ) : null}
 
-          {listing.address || listing.meeting_point ? <><H2>Where</H2><P>{listing.address || listing.meeting_point}</P></> : null}
+          {!isStay && listing.what_to_bring?.length ? (
+            <>
+              <H2>What to bring</H2>
+              <View style={{ gap: 6 }}>{listing.what_to_bring.map((w) => <P key={w}>• {w}</P>)}</View>
+            </>
+          ) : null}
+
+          {isStay ? (listing.address ? <><H2>Where</H2><P>{listing.address}</P></> : null) : (
+            <>
+              <H2>Where to meet</H2>
+              <P>{`${bay ? `This trip runs on ${bay.name}` : 'This trip runs on the bay'}${area ? ` out of ${area.name}` : ''}. Your guide will touch base with you on the time and where to meet once your trip is booked.`}</P>
+            </>
+          )}
         </View>
         <View style={{ flexBasis: 340, flexGrow: 1 }}>
           <BookingBox listing={listing} />

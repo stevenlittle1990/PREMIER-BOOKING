@@ -13,7 +13,9 @@ export function Page({ children, bare }: { children: ReactNode; bare?: boolean }
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <Header />
-        {bare ? children : <Container style={{ paddingVertical: 20 }}>{children}</Container>}
+        <View {...webData('beach')} style={{ flexGrow: 1 }}>
+          {bare ? children : <Container style={{ paddingVertical: 20 }}>{children}</Container>}
+        </View>
         <Footer />
       </ScrollView>
       <TabBar />
