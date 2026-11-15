@@ -24,6 +24,7 @@ export function TabBar() {
   const tabs: Tab[] = [
     { href: '/', label: 'Explore', icon: 'compass-outline', match: (p) => p === '/' || p.startsWith('/stays') || p.startsWith('/trips') || p.startsWith('/areas') || p.startsWith('/search') },
     { href: '/plan', label: 'Plan', icon: 'sparkles-outline', match: (p) => p.startsWith('/plan') },
+    { href: '/community', label: 'Community', icon: 'images-outline', match: (p) => p.startsWith('/community') || p.startsWith('/post/') || p.startsWith('/review/') },
     ...(isHost ? [guideOnly
       ? { href: '/guide', label: 'My jobs', icon: 'boat-outline', match: (p: string) => p.startsWith('/guide/') || p === '/guide' } as Tab
       : { href: '/host', label: 'Dashboard', icon: 'grid-outline', match: (p: string) => p.startsWith('/host') || p === '/guide' || p.startsWith('/guide/') } as Tab] : []),

@@ -30,6 +30,14 @@
   to = "/waiver/[id].html"
   status = 200
 [[redirects]]
+  from = "/post/*"
+  to = "/post/[id].html"
+  status = 200
+[[redirects]]
+  from = "/review/*"
+  to = "/review/[token].html"
+  status = 200
+[[redirects]]
   from = "/host/listing/*"
   to = "/host/listing/[id].html"
   status = 200

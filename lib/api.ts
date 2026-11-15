@@ -1,7 +1,7 @@
 import { catalog } from './catalog';
 import { addDays } from './format';
 import { supabase } from './supabase';
-import type { Area, Assignment, BaySystem, Booking, Listing, Notification, Profile, TaxForm, Waiver } from './types';
+import type { Area, Assignment, BaySystem, Booking, Listing, Notification, Post, Profile, Review, ReviewInfo, TaxForm, Waiver } from './types';
 import type { DayMark } from '../components/Calendar';
 
 // Everything that talks to the database lives here. Without a database, reads fall back to the built-in catalog.
@@ -325,4 +325,76 @@ export async function sendAnnouncement(m: { title: string; body: string; link: s
   const { data, error } = await supabase!.rpc('send_announcement', { p_title: m.title, p_body: m.body, p_link: m.link, p_text: m.text, p_email: m.email });
   if (error) throw new Error(/could not find|PGRST202/i.test(`${error.code} ${error.message}`) ? 'This needs the messages database update first (see the script in your files).' : error.message);
   return data as number;
+}
+
+// ---- Community posts and reviews ----
+
+export type FeedItem = ({ type: 'post' } & Post) | ({ type: 'review' } & Review);
+
+export async function communityFeed(limit = 40): Promise<FeedItem[]> {
+  if (!supabase) return [];
+  const [p, r] = await Promise.all([
+    supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(limit),
+    supabase.from('reviews').select('*').order('created_at', { ascending: false }).limit(limit),
+  ]);
+  const items: FeedItem[] = [
+    ...((p.data ?? []) as Post[]).map((x) => ({ type: 'post' as const, ...x })),
+    ...((r.data ?? []) as Review[]).map((x) => ({ type: 'review' as const, ...x })),
+  ];
+  return items.sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, limit);
+}
+
+export async function feedItem(id: string): Promise<FeedItem | null> {
+  if (!supabase) return null;
+  const p = await supabase.from('posts').select('*').eq('id', id).maybeSingle();
+  if (p.data) return { type: 'post', ...(p.data as Post) };
+  const r = await supabase.from('reviews').select('*').eq('id', id).maybeSingle();
+  return r.data ? { type: 'review', ...(r.data as Review) } : null;
+}
+
+export async function createPost(body: string, photos: string[], listingId: string | null) {
+  const { data: u } = await supabase!.auth.getUser();
+  const { error } = await supabase!.from('posts').insert({ author_id: u.user?.id, body: body.trim(), photos, listing_id: listingId });
+  if (error) throw error;
+}
+
+export async function deletePost(id: string) {
+  const { error } = await supabase!.from('posts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function setHidden(type: 'post' | 'review', id: string, hidden: boolean) {
+  const { error } = await supabase!.from(type === 'post' ? 'posts' : 'reviews').update({ hidden }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function reviewsFor(listingId: string): Promise<Review[]> {
+  if (!supabase) return [];
+  const { data } = await supabase.from('reviews').select('*').eq('listing_id', listingId).eq('hidden', false).order('created_at', { ascending: false });
+  return (data ?? []) as Review[];
+}
+
+export async function reviewInfo(token: string): Promise<ReviewInfo | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc('review_info', { p_token: token });
+  if (error) return null;
+  return (data as ReviewInfo) ?? null;
+}
+
+export async function submitReview(token: string, r: { stars: number; body: string; photos: string[]; name?: string }) {
+  const { data, error } = await supabase!.rpc('submit_review', { p_token: token, p_stars: r.stars, p_body: r.body, p_photos: r.photos, p_name: r.name ?? null });
+  if (error) throw error;
+  return data as string;
+}
+
+// Upload already-shrunk photos to the community bucket under folder (posts/<user id> or reviews/<token>).
+export async function uploadPhotos(folder: string, blobs: Blob[]): Promise<string[]> {
+  const urls: string[] = [];
+  for (const b of blobs) {
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+    const { error } = await supabase!.storage.from('community').upload(path, b, { contentType: 'image/jpeg', upsert: false });
+    if (error) throw error;
+    urls.push(supabase!.storage.from('community').getPublicUrl(path).data.publicUrl);
+  }
+  return urls;
 }

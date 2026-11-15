@@ -8,6 +8,7 @@ import { colors } from '../lib/theme';
 import { CATEGORY_LABELS, type Listing } from '../lib/types';
 import { Calendar, type DayMark } from './Calendar';
 import { InquiryForm } from './InquiryForm';
+import { ListingReviews } from './Community';
 import { Photo } from './ListingCard';
 import { Button, Card, Chip, Field, H1, H2, Notice, P, Page, Row, Seo } from './ui';
 
@@ -107,6 +108,7 @@ export function ListingDetail({ slug }: { slug: string }) {
               <P>{`${bay ? `This trip runs on ${bay.name}` : 'This trip runs on the bay'}${area ? ` out of ${area.name}` : ''}. Your guide will touch base with you on the time and where to meet once your trip is booked.`}</P>
             </>
           )}
+          <ListingReviews listingId={listing.id} />
         </View>
         <View style={{ flexBasis: 340, flexGrow: 1 }}>
           <BookingBox listing={listing} />

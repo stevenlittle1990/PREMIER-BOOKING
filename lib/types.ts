@@ -62,6 +62,23 @@ export type Booking = {
   host_note: string | null;
   group_id: string | null;
   created_at: string;
+  review_token?: string;
+  review_asked_at?: string | null;
+};
+
+export type Post = {
+  id: string; author_id: string; author_name: string; author_badge: string | null; body: string; photos: string[];
+  listing_id: string | null; hidden: boolean; created_at: string;
+};
+
+export type Review = {
+  id: string; listing_id: string; author_name: string; stars: number; body: string; photos: string[]; hidden: boolean;
+  created_at: string; updated_at?: string;
+};
+
+export type ReviewInfo = {
+  listing_title: string; listing_slug: string; listing_kind: 'stay' | 'trip'; start_date: string; end_date: string;
+  name: string; ready: boolean; status: Booking['status']; review: Review | null;
 };
 
 export type Profile = {

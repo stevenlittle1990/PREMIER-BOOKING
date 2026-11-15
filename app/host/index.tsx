@@ -119,6 +119,7 @@ function Requests({ bookings, assignments, people, waivers, reload, isAdmin }: C
   const today = iso(new Date());
   const pending = bookings.filter((b) => b.status === 'requested');
   const upcoming = bookings.filter((b) => b.status === 'accepted' && b.end_date >= today);
+  const recent = bookings.filter((b) => b.status === 'accepted' && b.end_date < today && b.end_date >= iso(new Date(Date.now() - 30 * 86400e3)));
   const card = (b: BookingRow) => <BookingCard key={b.id} b={b} reload={reload} isAdmin={isAdmin} people={people}
     crew={assignments.filter((x) => x.booking_id === b.id)} signed={waivers.filter((w) => w.booking_id === b.id).length} />;
   return (
@@ -127,6 +128,7 @@ function Requests({ bookings, assignments, people, waivers, reload, isAdmin }: C
       {pending.length ? pending.map(card) : <P muted>No new requests.</P>}
       <H2>Coming up</H2>
       {upcoming.length ? upcoming.map(card) : <P muted>Nothing confirmed yet.</P>}
+      {recent.length ? <><H2>Just finished: ask for a review</H2>{recent.map(card)}</> : null}
     </View>
   );
 }
@@ -165,8 +167,32 @@ function BookingCard({ b, reload, isAdmin, people, crew, signed }: {
           </Row>
         </>
       ) : null}
+      {b.status === 'accepted' && b.review_token && b.start_date <= todayIso() ? <ReviewAsk b={b} /> : null}
       {isAdmin && b.status !== 'declined' && b.status !== 'cancelled' ? <CrewBox b={b} crew={crew} people={people} reload={reload} /> : null}
     </Card>
+  );
+}
+
+const todayIso = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
+// After the trip: text the guest their review link from this phone (works today, before automatic texts are set up).
+function ReviewAsk({ b }: { b: BookingRow }) {
+  const [copied, setCopied] = useState(false);
+  const site = process.env.EXPO_PUBLIC_SITE_URL || 'https://premier-booking.netlify.app';
+  const link = `${site}/review/${b.review_token}`;
+  const first = (b.guest_name || '').split(' ')[0];
+  const msg = `Hi ${first}, thanks for coming out with us! Would you leave a quick review and share your photos from ${b.listing?.title ?? 'your trip'}? ${link}`;
+  const phone = (b.guest_phone || '').replace(/[^0-9+]/g, '');
+  return (
+    <View style={{ borderTopWidth: 1, borderTopColor: colors.line, marginTop: 8, paddingTop: 8, gap: 6 }}>
+      <Text style={{ fontWeight: '800', color: colors.navy }}>Ask for a review</Text>
+      <Row gap={8}>
+        {phone ? <Button small title="Text review link" onPress={() => Linking.openURL(`sms:${phone}${Platform.OS === 'ios' || /iPhone|iPad/.test(globalThis.navigator?.userAgent ?? '') ? '&' : '?'}body=${encodeURIComponent(msg)}`)} /> : null}
+        {b.guest_email ? <Button small kind="secondary" title="Email it" onPress={() => Linking.openURL(`mailto:${b.guest_email}?subject=${encodeURIComponent('How was your trip?')}&body=${encodeURIComponent(msg)}`)} /> : null}
+        <Button small kind="ghost" title={copied ? 'Copied' : 'Copy link'} onPress={async () => { try { await navigator.clipboard.writeText(link); setCopied(true); } catch { /* shown below */ } }} />
+      </Row>
+      {b.review_asked_at ? <P muted style={{ fontSize: 13 }}>{`The app asked automatically on ${new Date(b.review_asked_at).toLocaleDateString()}.`}</P> : null}
+    </View>
   );
 }
 

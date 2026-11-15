@@ -33,6 +33,7 @@ export function Header() {
           <NavLink href="/search?kind=stay" label="Stays" />
           <NavLink href="/search?kind=trip" label="Trips" />
           <NavLink href="/plan" label="Plan a trip" />
+          <NavLink href="/community" label="Community" />
           <NavLink href="/guides" label="Guides" />
           {isHost && !guideOnly ? <NavLink href="/host" label="Dashboard" /> : null}
           {guideOnly ? <NavLink href="/guide" label="My jobs" /> : null}

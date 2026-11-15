@@ -20,6 +20,7 @@ export default function Account() {
   const { ready, session, profile, signOut } = useAuth();
   const [rows, setRows] = useState<(Booking & { listing: Listing | null })[] | null>(null);
   const [waivers, setWaivers] = useState<Waiver[]>([]);
+  const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const load = () => myBookings().then((r) => { setRows(r); waiversFor(r.filter((b) => b.listing?.kind === 'trip').map((b) => b.id)).then(setWaivers); });
   useEffect(() => { if (session) load(); }, [session]);
 
@@ -53,6 +54,9 @@ export default function Account() {
               {b.listing ? <Link href={listingPath(b.listing) as never}><Text style={{ fontSize: 18, fontWeight: '700', color: colors.navy }}>{b.listing.title}</Text></Link> : null}
               <P>{b.start_date === b.end_date ? niceDate(b.start_date) : `${niceDate(b.start_date)} → ${niceDate(b.end_date)}`}{b.start_time ? ` · ${b.start_time}` : ''} · {b.guests} guests</P>
               {b.host_note ? <Notice>{`From the host: ${b.host_note}`}</Notice> : null}
+              {b.status === 'accepted' && b.review_token && b.start_date <= today ? (
+                <Row><Button small title={b.listing?.kind === 'stay' ? 'Review your stay' : 'Leave a review and photos'} href={`/review/${b.review_token}`} /></Row>
+              ) : null}
               {b.listing?.kind === 'trip' && (b.status === 'requested' || b.status === 'accepted') ? (
                 waivers.some((w) => w.booking_id === b.id && w.signer_id === session.user.id)
                   ? <Text style={{ color: colors.good, fontWeight: '700' }}>Waiver signed</Text>
