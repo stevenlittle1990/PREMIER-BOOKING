@@ -114,7 +114,7 @@
         "Primary guest must be 25 or older (photo ID required)",
         "No smoking, vaping or drugs anywhere on the property",
         "Quiet hours 10 PM to sunrise",
-        "Up to 2 pets, 150 lbs max each (refundable pet deposit)",
+        "No pets",
         "Parking on site",
         "Trash goes in the big cans downstairs; pickup is Tuesday",
         "Lost keys carry a replacement fee",
@@ -126,8 +126,8 @@
       "cancellation_policy": "Full refund if you cancel within 36 hours of booking and check-in is at least 30 days away. 50% refund if you cancel at least 20 days before check-in. No refund within 20 days of check-in. If weather, an evacuation or damage makes the house unusable, we cancel and refund you.",
       "tax_pct": 6,
       "security_deposit_cents": 50000,
-      "pets_allowed": true,
-      "pet_fee_cents": 15000,
+      "pets_allowed": false,
+      "pet_fee_cents": 0,
       "what_to_bring": []
     },
     {

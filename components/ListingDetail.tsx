@@ -87,7 +87,7 @@ export function ListingDetail({ slug }: { slug: string }) {
                 {listing.check_out_time ? <P>{`Checkout before ${listing.check_out_time}`}</P> : null}
                 {isStay && listing.min_nights > 1 ? <P>{`${listing.min_nights} night minimum`}</P> : null}
                 {listing.security_deposit_cents ? <P>Refundable security deposit, returned within 7 days after checkout</P> : null}
-                {isStay ? <P>{listing.pets_allowed ? `Pets welcome${listing.pet_fee_cents ? ' (refundable pet deposit)' : ''}` : 'No pets'}</P> : null}
+                {isStay && !listing.house_rules.some((r) => /pet/i.test(r)) ? <P>No pets</P> : null}
                 {listing.house_rules.map((r) => <P key={r}>• {r}</P>)}
                 {listing.cancellation_policy ? <P>{`Cancellation: ${listing.cancellation_policy}`}</P> : null}
               </View>

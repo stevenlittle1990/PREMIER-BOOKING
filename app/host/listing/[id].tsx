@@ -72,7 +72,7 @@ export default function EditListing() {
         rooms: perLine(text.rooms).map((r) => { const [n, ...b] = r.split(':'); return { name: n.trim(), beds: b.join(':').trim() }; }),
         cleaning_fee_cents: Math.round((Number(text.cleaning) || 0) * 100),
         security_deposit_cents: Math.round((Number(text.deposit) || 0) * 100),
-        pet_fee_cents: Math.round((Number(text.petFee) || 0) * 100),
+        pet_fee_cents: 0, pets_allowed: false, // No pets at any house (Steven, 2026-11-15).
         tax_pct: Number(l.tax_pct) || 0,
         owner_id: l.owner_id ?? session?.user.id ?? null,
       };
@@ -158,12 +158,7 @@ export default function EditListing() {
               <Row gap={12}>
                 <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Tax (%)" keyboardType="decimal-pad" value={String(l.tax_pct ?? '')} onChangeText={(t) => set({ tax_pct: Number(t) || 0 })} /></View>
                 <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Security deposit ($)" keyboardType="decimal-pad" value={text.deposit} onChangeText={(t) => setText({ ...text, deposit: t })} /></View>
-                <View style={{ flexBasis: 140, flexGrow: 1 }}><Field label="Pet deposit per pet ($)" keyboardType="decimal-pad" value={text.petFee} onChangeText={(t) => setText({ ...text, petFee: t })} /></View>
               </Row>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                <Switch value={Boolean(l.pets_allowed)} onValueChange={(v) => set({ pets_allowed: v })} trackColor={{ true: colors.water, false: colors.line }} />
-                <Text>Pets allowed</Text>
-              </View>
             </>
           ) : null}
           <Field label="Rules (one per line)" multiline placeholder="No smoking inside" value={text.rules} onChangeText={(t) => setText({ ...text, rules: t })} />
